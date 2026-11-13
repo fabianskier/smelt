@@ -7,8 +7,8 @@
 
 ## 2. Parser (pure)
 
-- [ ] 2.1 Add sanitized fixtures under `test/support/fixtures/claude/`: record `success.jsonl` (init, text, rate limit, result) and `tool_use.jsonl` (a prompt that reads a file, producing tool use + tool result) with the real CLI (two minimal calls), then derive `error_result.jsonl` (`is_error: true`), `no_result.jsonl` and `unknown_and_malformed.jsonl` by hand from them; verify no local paths, tool lists or MCP server names remain (`grep`)
-- [ ] 2.2 Implement `Smelt.Runner.ClaudeCode.Parser` mapping decoded lines to events and building the `Result` from a `result` line; verify with parser tests covering every event type, tool use/result, rate limit windows, result metrics, and unknown/malformed lines producing no events
+- [x] 2.1 Add sanitized fixtures under `test/support/fixtures/claude/`: record `success.jsonl` (init, text, rate limit, result) and `tool_use.jsonl` (a prompt that reads a file, producing tool use + tool result) with the real CLI (two minimal calls), then derive `error_result.jsonl` (`is_error: true`), `no_result.jsonl` and `unknown_and_malformed.jsonl` by hand from them; verify no local paths, tool lists or MCP server names remain (`grep`)
+- [x] 2.2 Implement `Smelt.Runner.ClaudeCode.Parser` mapping decoded lines to events and building the `Result` from a `result` line; verify with parser tests covering every event type, tool use/result, rate limit windows, result metrics, and unknown/malformed lines producing no events
 
 ## 3. Run process and supervision
 

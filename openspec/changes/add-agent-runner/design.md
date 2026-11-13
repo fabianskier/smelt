@@ -80,7 +80,7 @@ Decoding uses Elixir's built-in `JSON` module, so there is no new dependency. A 
 | `rate_limit_event` | `:rate_limit` (one per window in `unifiedWindows`) |
 | `result` | `:result` |
 
-Unknown types and invalid JSON produce no event; they are logged at debug level. Keeping the parser pure means most of the mapping is tested without processes.
+Unknown types and unknown content blocks produce no event. `parse_line/1` returns `{:error, :invalid_json}` for lines that are not a JSON object, so the session can keep them as plain output (the last 20 lines attached to `{:exit_status, n, output}`). Keeping the parser pure means most of the mapping is tested without processes.
 
 Besides the parsed events, the session itself broadcasts one `:finished` event when the run ends (`data: {:ok, result} | {:error, reason}`), on success, failure or stop. It is the only event subscribers can rely on to know a run is over, since `:result` is missing when the agent crashes or is stopped.
 
