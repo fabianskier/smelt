@@ -2,8 +2,8 @@
 
 ## 1. Contract and data structures
 
-- [ ] 1.1 Define `Smelt.Runner.Event` (`type`, `data`) and `Smelt.Runner.Result` (`text`, `cost_usd`, `usage`, `num_turns`, `duration_ms`, `session_id`) structs with typespecs; verify with `mix compile --warnings-as-errors`
-- [ ] 1.2 Define the `Smelt.Runner` behaviour (`run/2` callback) and helpers `new_run_id/0`, `topic/1`, `subscribe/1`; verify with a test that `subscribe/1` delivers messages broadcast on `topic/1`
+- [x] 1.1 Define `Smelt.Runner.Event` (`type`, `data`) and `Smelt.Runner.Result` (`text`, `cost_usd`, `usage`, `num_turns`, `duration_ms`, `session_id`) structs with typespecs; verify with `mix compile --warnings-as-errors`
+- [x] 1.2 Define the `Smelt.Runner` behaviour (`run/2` callback) and helpers `new_run_id/0`, `topic/1`, `subscribe/1`; verify with a test that `subscribe/1` delivers messages broadcast on `topic/1`
 
 ## 2. Parser (pure)
 
