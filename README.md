@@ -1,18 +1,38 @@
 # Smelt
 
-To start your Phoenix server:
+A personal, private software factory written in Elixir. It drives software development end to end — from a raw idea to merged code — and delegates the thinking, writing and reviewing of code to Claude Code.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+The name: to *smelt* is to melt ore to extract pure metal. A raw idea goes in; tested code comes out.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+## How it works
 
-Ready to run in production? Please [check our deployment guides](https://phoenix.hexdocs.pm/deployment.html).
+- **Smelt (Elixir/OTP) orchestrates**: states, queues, concurrency, gates, approvals and a live dashboard.
+- **Claude Code executes**: discovery, specs, implementation and review, via headless `claude -p`.
+- **OpenSpec defines the specs**: the format and lifecycle of each change (Spec-Driven Development).
 
-## Learn more
+See [`docs/architecture.md`](docs/architecture.md) for the full design.
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://phoenix.hexdocs.pm/overview.html
-* Docs: https://phoenix.hexdocs.pm
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## Requirements
+
+- [mise](https://mise.jdx.dev): installs Erlang and Elixir from `mise.toml`, plus Node and the OpenSpec CLI (`@fission-ai/openspec`) from the global config.
+- PostgreSQL 18 (Postgres.app in development).
+- [Claude Code](https://claude.com/claude-code) CLI, logged in.
+
+## Getting started
+
+```sh
+mise install       # Erlang, Elixir
+mix setup          # deps, database, assets
+mix phx.server     # or: iex -S mix phx.server
+```
+
+Then open [`localhost:4000`](http://localhost:4000).
+
+Before committing, run `mix precommit` (compile with warnings as errors, format, test).
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md): how Smelt works.
+- [`docs/decisions.md`](docs/decisions.md): why it is built this way.
+- [`docs/roadmap.md`](docs/roadmap.md): build path, current status and next steps.
+- [`openspec/`](openspec/): living specs and changes in progress.
