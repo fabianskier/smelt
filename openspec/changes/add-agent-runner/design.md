@@ -110,6 +110,8 @@ The session traps exits. On `stop/1`, on the caller's `:DOWN` or on `terminate/2
 2. Send `SIGTERM` with `System.cmd("kill", ["-TERM", pid])`; after a 2-second grace period, send `SIGKILL` if the process is still alive (checked with `kill -0`).
 3. Close the port.
 
+Ordering: on stop and on owner exit, the agent is killed **before** `:finished` is broadcast and before the caller gets `{:error, :stopped}`, so "stopped" always means the process is gone. `terminate/2` kills again as a safety net (a no-op if the agent already exited).
+
 The grace period MUST stay below the session's child-spec `shutdown` (default 5 seconds for workers). Otherwise, when the application shuts down, the supervisor kills the session mid-cleanup and the agent is left running.
 
 **Alternative:** a dependency like `MuonTrap` or `erlexec`. Rejected for now: it adds a native dependency, and plain `kill` is enough for a single process.
@@ -132,5 +134,6 @@ The grace period MUST stay below the session's child-spec `shutdown` (default 5 
 
 - **[Child processes of the agent survive]:** killing Claude Code may leave tools it spawned (for example a `bash` running tests) alive. → Acceptable for this change, since the dashboard only runs read-only prompts. Revisit with process groups or `MuonTrap` before builds run in worktrees (stage 2).
 - **[stream-json format changes between CLI versions]:** → The parser ignores unknown types instead of failing; fixtures record the version they came from; parser tests break visibly on changes.
+- **[A brutal kill of the session (`Process.exit(pid, :kill)`) cannot be trapped]:** `terminate/2` does not run, so the agent is left running until it next writes to its closed stdout. → Nothing in Smelt kills sessions that way; supervisors use `:shutdown`, which is trapped. A process-group based cleanup (see the first risk) would cover it.
 - **[`kill` via `System.cmd` depends on the OS]:** → macOS and Linux both provide it; Windows is not a target.
 - **[A blocking `run/2` holds the caller for a long time]:** → Intended for Oban workers. Interactive callers use PubSub and `stop/1`.

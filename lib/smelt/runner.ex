@@ -19,6 +19,7 @@ defmodule Smelt.Runner do
   alias Smelt.Runner.{Event, Result}
 
   @pubsub Smelt.PubSub
+  @registry Smelt.Runner.Registry
 
   @typedoc "Why a run ended without a result."
   @type error ::
@@ -53,6 +54,23 @@ defmodule Smelt.Runner do
   @doc "Subscribes the calling process to the events of a run."
   @spec subscribe(String.t()) :: :ok | {:error, term()}
   def subscribe(run_id), do: Phoenix.PubSub.subscribe(@pubsub, topic(run_id))
+
+  @doc """
+  Stops a running run and terminates its agent process.
+
+  The run then ends with `{:error, :stopped}`. Returns `{:error, :not_found}`
+  when no run with that id is running.
+  """
+  @spec stop(String.t()) :: :ok | {:error, :not_found}
+  def stop(run_id) do
+    case Registry.lookup(@registry, run_id) do
+      [{pid, _value}] -> GenServer.call(pid, :stop)
+      [] -> {:error, :not_found}
+    end
+  catch
+    # The run ended between the lookup and the call.
+    :exit, _reason -> {:error, :not_found}
+  end
 
   @doc "Broadcasts an event of a run to its subscribers."
   @spec broadcast(String.t(), Event.t()) :: :ok | {:error, term()}

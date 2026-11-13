@@ -41,6 +41,7 @@ defmodule Smelt.Runner.ClaudeCode do
       executable ->
         session_opts = [
           run_id: run_id,
+          owner: self(),
           cwd: cwd,
           executable: executable,
           args: [

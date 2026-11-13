@@ -20,7 +20,7 @@
 
 ## 4. Cleanup
 
-- [ ] 4.1 Implement `Smelt.Runner.stop/1` and OS-process termination (SIGTERM, then SIGKILL after a 2-second grace period, below the 5-second `shutdown`) on stop, on the caller's `:DOWN` and in `terminate/2`; verify with tests for "Run is stopped", "Owner exits" and "Subscribers see a stop" that read the fake's pid file and assert the OS process is gone (`kill -0` fails)
+- [x] 4.1 Implement `Smelt.Runner.stop/1` and OS-process termination (SIGTERM, then SIGKILL after a 2-second grace period, below the 5-second `shutdown`) on stop, on the caller's `:DOWN` and in `terminate/2`; verify with tests for "Run is stopped", "Owner exits" and "Subscribers see a stop" that read the fake's pid file and assert the OS process is gone (`kill -0` fails)
 
 ## 5. Integration and docs
 

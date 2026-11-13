@@ -129,6 +129,18 @@ defmodule Smelt.Runner.ClaudeCodeTest do
       assert {:error, {:exit_status, 3, _}} = error = Task.await(task)
       assert %Event{type: :finished, data: ^error} = List.last(events)
     end
+
+    test "Scenario: Subscribers see a stop", ctx do
+      {run_id, _os_pid, task} = start_sleeping_run(ctx)
+
+      assert :ok = Runner.stop(run_id)
+      events = collect(run_id)
+
+      assert {:error, :stopped} = Task.await(task)
+      assert %Event{type: :finished, data: {:error, :stopped}} = List.last(events)
+      assert Enum.count(events, &(&1.type == :finished)) == 1
+      refute_receive {Runner, ^run_id, _}
+    end
   end
 
   describe "Requirement: Report cost and usage in the result" do
@@ -234,6 +246,91 @@ defmodule Smelt.Runner.ClaudeCodeTest do
 
       assert {:ok, {:ok, %Result{}}} = Task.yield(task, 2_000) || Task.shutdown(task)
     end
+  end
+
+  describe "Requirement: Clean up the agent process" do
+    test "Scenario: Run is stopped", ctx do
+      {run_id, os_pid, task} = start_sleeping_run(ctx)
+      assert os_alive?(os_pid)
+
+      assert :ok = Runner.stop(run_id)
+      assert {:error, :stopped} = Task.await(task)
+      refute os_alive?(os_pid)
+    end
+
+    test "Scenario: Owner exits", ctx do
+      pidfile = Path.join(ctx.tmp_dir, "fake.pid")
+      run_id = Runner.new_run_id()
+      :ok = Runner.subscribe(run_id)
+      on_exit(fn -> kill_pidfile(pidfile) end)
+
+      # The agent ignores SIGTERM, so it takes 2 s to die: if subscribers were
+      # told before the kill finished, the agent would still be alive below.
+      env = [{"FAKE_CLAUDE_IGNORE_TERM", "1"} | sleeping_env(pidfile)]
+
+      # The owner is a separate process that we kill while the agent runs.
+      owner = spawn(fn -> run(ctx, env, run_id: run_id) end)
+      assert_receive {Runner, ^run_id, %Event{type: :session_started}}, 5_000
+      os_pid = read_pid(pidfile)
+      assert os_alive?(os_pid)
+
+      Process.exit(owner, :kill)
+
+      assert_receive {Runner, ^run_id, %Event{type: :finished, data: {:error, :stopped}}}, 5_000
+      refute os_alive?(os_pid)
+    end
+
+    @tag :slow
+    test "an agent that ignores SIGTERM is killed before the caller hears it stopped", ctx do
+      {run_id, os_pid, task} = start_sleeping_run(ctx, [{"FAKE_CLAUDE_IGNORE_TERM", "1"}])
+
+      started = System.monotonic_time(:millisecond)
+      stopper = Task.async(fn -> Runner.stop(run_id) end)
+
+      # The caller must only hear :stopped once the agent is really dead.
+      assert {:error, :stopped} = Task.await(task)
+      refute os_alive?(os_pid)
+      assert System.monotonic_time(:millisecond) - started >= 2_000
+      assert :ok = Task.await(stopper)
+    end
+
+    test "a supervisor shutdown of the session terminates the agent", ctx do
+      {run_id, os_pid, task} = start_sleeping_run(ctx)
+      [{session, _}] = Registry.lookup(Smelt.Runner.Registry, run_id)
+
+      :ok = DynamicSupervisor.terminate_child(Smelt.Runner.Supervisor, session)
+
+      refute os_alive?(os_pid)
+      assert {:error, {:crashed, _}} = Task.await(task)
+    end
+
+    test "stopping an unknown run returns not found" do
+      assert {:error, :not_found} = Runner.stop(Runner.new_run_id())
+    end
+  end
+
+  # Starts a run whose agent emits a few events and then sleeps.
+  # Returns {run_id, agent_os_pid, task}; the caller is subscribed.
+  defp start_sleeping_run(ctx, extra_env \\ []) do
+    pidfile = Path.join(ctx.tmp_dir, "fake.pid")
+    on_exit(fn -> kill_pidfile(pidfile) end)
+
+    {run_id, task} = start_run(ctx, extra_env ++ sleeping_env(pidfile))
+    assert_receive {Runner, ^run_id, %Event{type: :session_started}}, 5_000
+    {run_id, read_pid(pidfile), task}
+  end
+
+  defp sleeping_env(pidfile) do
+    [{"FAKE_CLAUDE_PIDFILE", pidfile}, fixture("no_result.jsonl"), {"FAKE_CLAUDE_SLEEP", "30"}]
+  end
+
+  # The fake writes its pidfile before any output, so it exists once
+  # :session_started has been received.
+  defp read_pid(pidfile), do: pidfile |> File.read!() |> String.trim()
+
+  defp os_alive?(os_pid) do
+    {_, status} = System.cmd("kill", ["-0", os_pid], stderr_to_stdout: true)
+    status == 0
   end
 
   defp kill_pidfile(pidfile) do

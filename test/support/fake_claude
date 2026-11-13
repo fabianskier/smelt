@@ -3,6 +3,7 @@
 # environment variables, applied in this order:
 #
 #   FAKE_CLAUDE_PIDFILE=path    write this process's pid to `path`
+#   FAKE_CLAUDE_IGNORE_TERM=1   ignore SIGTERM (kept across exec), to test the SIGKILL fallback
 #   FAKE_CLAUDE_READ_STDIN=1    read stdin until EOF before any output
 #   FAKE_CLAUDE_STDERR=msg      write `msg` to stderr
 #   FAKE_CLAUDE_FIXTURE=path    replay a stream-json fixture to stdout
@@ -12,6 +13,7 @@
 #   FAKE_CLAUDE_EXIT=n          exit with status `n` (default 0)
 
 if [ -n "$FAKE_CLAUDE_PIDFILE" ]; then echo $$ > "$FAKE_CLAUDE_PIDFILE"; fi
+if [ -n "$FAKE_CLAUDE_IGNORE_TERM" ]; then trap '' TERM; fi
 if [ -n "$FAKE_CLAUDE_READ_STDIN" ]; then cat > /dev/null; fi
 if [ -n "$FAKE_CLAUDE_STDERR" ]; then echo "$FAKE_CLAUDE_STDERR" >&2; fi
 if [ -n "$FAKE_CLAUDE_FIXTURE" ]; then cat "$FAKE_CLAUDE_FIXTURE"; fi
