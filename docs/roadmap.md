@@ -20,10 +20,10 @@ Stage 1 (skeleton).
 - 1.4: first commit, pushed to the private repo `github.com/fabianskier/smelt`.
 - 1.5: `openspec init --tools claude`, project rules in `openspec/config.yaml`, `CLAUDE.md`, and docs split into `README.md` + `docs/`.
 - 1.6: `DATABASE_URL` set in `mise.toml` `[env]` and read in `config/runtime.exs` (dev only; tests keep `smelt_test` from `config/test.exs`).
+- 1.7: Oban 2.24 (Postgres, Basic engine, migration v14) with queues `claude: 1`, `local: 1`, plus Pruner (7 days) and Lifeline plugins. Tests use `testing: :manual`.
 
 **Next:**
-1. **1.7:** add Oban.
-2. **1.8:** first OpenSpec change: `Smelt.Runner` (behaviour + Claude Code implementation via Port) and the stream in LiveView.
+1. **1.8:** first OpenSpec change: `Smelt.Runner` (behaviour + Claude Code implementation via Port) and the stream in LiveView.
 
 **Notes:**
 - Hex, rebar3 and `phx_new` live inside mise's Elixir install: reinstall them when the Elixir version changes.

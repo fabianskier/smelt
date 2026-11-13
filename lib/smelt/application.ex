@@ -10,6 +10,7 @@ defmodule Smelt.Application do
     children = [
       SmeltWeb.Telemetry,
       Smelt.Repo,
+      {Oban, Application.fetch_env!(:smelt, Oban)},
       {DNSCluster, query: Application.get_env(:smelt, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Smelt.PubSub},
       # Start a worker by calling: Smelt.Worker.start_link(arg)

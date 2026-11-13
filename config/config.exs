@@ -11,6 +11,18 @@ config :smelt,
   ecto_repos: [Smelt.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+# Background jobs. One queue per agent provider; the limit is its capacity.
+config :smelt, Oban,
+  engine: Oban.Engines.Basic,
+  repo: Smelt.Repo,
+  queues: [claude: 1, local: 1],
+  plugins: [
+    # Keep finished jobs for 7 days so their history can be inspected.
+    {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    # Rescue jobs left "executing" after a crash or restart.
+    Oban.Plugins.Lifeline
+  ]
+
 # Configure the endpoint
 config :smelt, SmeltWeb.Endpoint,
   url: [host: "localhost"],

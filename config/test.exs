@@ -1,5 +1,8 @@
 import Config
 
+# Jobs are only inserted in tests; run them explicitly with Oban.Testing.
+config :smelt, Oban, testing: :manual
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
