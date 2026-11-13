@@ -11,6 +11,9 @@ config :smelt,
   ecto_repos: [Smelt.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+# Claude Code CLI used by Smelt.Runner.ClaudeCode (a name on the PATH or a path).
+config :smelt, Smelt.Runner.ClaudeCode, executable: "claude"
+
 # Background jobs. One queue per agent provider; the limit is its capacity.
 config :smelt, Oban,
   engine: Oban.Engines.Basic,

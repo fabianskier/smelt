@@ -1,0 +1,31 @@
+#!/bin/sh
+# Fake Claude Code CLI for tests. Ignores its arguments; behavior comes from
+# environment variables, applied in this order:
+#
+#   FAKE_CLAUDE_PIDFILE=path    write this process's pid to `path`
+#   FAKE_CLAUDE_READ_STDIN=1    read stdin until EOF before any output
+#   FAKE_CLAUDE_STDERR=msg      write `msg` to stderr
+#   FAKE_CLAUDE_FIXTURE=path    replay a stream-json fixture to stdout
+#   FAKE_CLAUDE_PRINT_CWD=1     emit a success result whose text is the working directory
+#   FAKE_CLAUDE_LONG_LINE=n     emit an assistant text event with `n` bytes of text
+#   FAKE_CLAUDE_SLEEP=s         replace this process with `sleep s` (same pid)
+#   FAKE_CLAUDE_EXIT=n          exit with status `n` (default 0)
+
+if [ -n "$FAKE_CLAUDE_PIDFILE" ]; then echo $$ > "$FAKE_CLAUDE_PIDFILE"; fi
+if [ -n "$FAKE_CLAUDE_READ_STDIN" ]; then cat > /dev/null; fi
+if [ -n "$FAKE_CLAUDE_STDERR" ]; then echo "$FAKE_CLAUDE_STDERR" >&2; fi
+if [ -n "$FAKE_CLAUDE_FIXTURE" ]; then cat "$FAKE_CLAUDE_FIXTURE"; fi
+
+if [ -n "$FAKE_CLAUDE_PRINT_CWD" ]; then
+  printf '{"type":"result","subtype":"success","is_error":false,"result":"%s"}\n' "$(pwd -P)"
+fi
+
+if [ -n "$FAKE_CLAUDE_LONG_LINE" ]; then
+  printf '{"type":"assistant","message":{"content":[{"type":"text","text":"'
+  head -c "$FAKE_CLAUDE_LONG_LINE" /dev/zero | tr '\0' 'a'
+  printf '"}]}}\n'
+fi
+
+if [ -n "$FAKE_CLAUDE_SLEEP" ]; then exec sleep "$FAKE_CLAUDE_SLEEP"; fi
+
+exit "${FAKE_CLAUDE_EXIT:-0}"

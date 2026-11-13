@@ -13,6 +13,9 @@ defmodule Smelt.Application do
       {Oban, Application.fetch_env!(:smelt, Oban)},
       {DNSCluster, query: Application.get_env(:smelt, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Smelt.PubSub},
+      # Agent runs: looked up by run id, one temporary process per run
+      {Registry, keys: :unique, name: Smelt.Runner.Registry},
+      {DynamicSupervisor, name: Smelt.Runner.Supervisor, strategy: :one_for_one},
       # Start a worker by calling: Smelt.Worker.start_link(arg)
       # {Smelt.Worker, arg},
       # Start to serve requests, typically the last entry

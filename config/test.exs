@@ -3,6 +3,10 @@ import Config
 # Jobs are only inserted in tests; run them explicitly with Oban.Testing.
 config :smelt, Oban, testing: :manual
 
+# Never call the real Claude Code CLI in tests.
+config :smelt, Smelt.Runner.ClaudeCode,
+  executable: Path.expand("../test/support/fake_claude", __DIR__)
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

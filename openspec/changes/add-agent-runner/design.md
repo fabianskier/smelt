@@ -40,6 +40,8 @@ The CLI also prints `no stdin data received in 3s` and waits 3 seconds when stdi
 Options: `:cwd` (required), `:run_id` (optional, generated if absent), `:args` (extra CLI arguments), `:env` (extra environment variables for the agent process, passed to the port's `env:`; used by tests to drive the fake CLI and in production for settings such as a separate config directory).
 `Smelt.Runner` also provides `new_run_id/0`, `topic/1`, `subscribe/1` and `stop/1`. To follow a run, the caller generates the id, subscribes, then calls `run/2`.
 
+`Smelt.Runner.ClaudeCode.run/2` also accepts `:executable` to override the configured CLI (used by the "Executable not found" test). A `:cwd` that does not exist raises `ArgumentError`: it is a caller bug, not an agent failure, so it is not one of the run errors.
+
 - **Why blocking:** callers will be Oban workers, which naturally wait for the work to finish; live progress goes over PubSub.
 - **Alternative:** an async `start/2` returning a pid. Rejected for now: it adds a second API with no caller yet, and it can be added later on top of the same process.
 
