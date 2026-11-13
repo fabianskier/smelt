@@ -49,8 +49,10 @@ Stage mapping:
 
 **Stack:** Phoenix 1.8 + LiveView · PostgreSQL 18 (connection via `DATABASE_URL`) · Oban (Postgres engine) · local git (worktrees + merge) · OpenSpec CLI (`--json`).
 
-- **`Smelt.Runner` (behaviour)**: common interface for agents (`run/2`, streamed events, result).
-  - Initial implementation: Claude Code CLI via `Port` → `claude -p --output-format stream-json --verbose`, parsing JSON events and broadcasting them over PubSub. Cost and tokens come in the stream.
+- **`Smelt.Runner` (behaviour)** *(implemented)*: common interface for agents. Behavior contract: `openspec/specs/agent-runner/spec.md`.
+  - API: `run(prompt, cwd: …, run_id: …, args: …, env: …)` blocks and returns `{:ok, %Smelt.Runner.Result{}}` (text, cost, tokens, turns, duration, session id) or `{:error, reason}`. To follow a run: `new_run_id/0` → `subscribe/1` → `run/2`; `stop/1` cancels it.
+  - Events, broadcast on `"run:<id>"` as `{Smelt.Runner, run_id, %Smelt.Runner.Event{}}`: `:session_started`, `:text`, `:tool_use`, `:tool_result`, `:rate_limit` (one per usage window), `:result`, and always a final `:finished`.
+  - `Smelt.Runner.ClaudeCode`: one `Session` GenServer per run (`:temporary`, under `Smelt.Runner.Supervisor`, registered in `Smelt.Runner.Registry`) that owns a `Port` to `claude -p --output-format stream-json --verbose`, with stdin closed and stderr captured. The agent's OS process is killed (SIGTERM, then SIGKILL) on stop, on caller exit and on shutdown. Tests use `test/support/fake_claude`, never the real CLI.
   - Future: local model (Ollama), Anthropic API key, `jido_harness` (Codex, Gemini CLI, etc.).
 - **State machine** per change/task: GenServer under a DynamicSupervisor + Registry, persisted in Postgres and resumed after a crash or restart.
 - **Per-provider capacity**: one Oban queue per provider (`queues: [claude: 1, local: 1]`, changeable at runtime with `Oban.scale_queue/1`).

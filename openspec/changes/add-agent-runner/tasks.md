@@ -24,8 +24,8 @@
 
 ## 5. Integration and docs
 
-- [ ] 5.1 Run one real smoke check by hand in `iex -S mix` (`Smelt.Runner.ClaudeCode.run("Reply with exactly: ok", cwd: File.cwd!())`) and confirm events arrive over PubSub and the result has cost and usage; not part of the automated suite
-- [ ] 5.2 Update `docs/architecture.md` (Runner section) with the implemented API and the event types; verify `mix precommit` and `openspec validate add-agent-runner --strict` pass
+- [x] 5.1 Run one real smoke check by hand in `iex -S mix` (`Smelt.Runner.ClaudeCode.run("Reply with exactly: ok", cwd: File.cwd!())`) and confirm events arrive over PubSub and the result has cost and usage; not part of the automated suite
+- [x] 5.2 Update `docs/architecture.md` (Runner section) with the implemented API and the event types; verify `mix precommit` and `openspec validate add-agent-runner --strict` pass
 
 ## Workflow follow-up
 
