@@ -3,6 +3,7 @@ schema: spec-driven
 context: |
   Write all artifacts in English.
   Every Scenario must be covered by at least one ExUnit test.
+  Name tests after the spec: `describe "Requirement: <name>"` with `test "Scenario: <name>"`, so scenario coverage can be checked by name.
   Existing tests are protected: changes must not modify or delete them unless the proposal says so explicitly.
   Claude is used only via the Claude Code CLI (Pro subscription); no Anthropic API key.
 
