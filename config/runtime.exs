@@ -35,6 +35,12 @@ if config_env() == :dev do
         ~r"lib/smelt_web/(controllers|live|components)/.*\.(ex|heex)$"E
       ]
     ]
+
+  # Database connection from the environment (set in mise.toml [env]).
+  # Falls back to the values in config/dev.exs when unset.
+  if database_url = System.get_env("DATABASE_URL") do
+    config :smelt, Smelt.Repo, url: database_url
+  end
 end
 
 if config_env() == :prod do

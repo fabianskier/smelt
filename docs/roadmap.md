@@ -19,11 +19,11 @@ Stage 1 (skeleton).
 - Environment (mise with Erlang 29.1.2, Elixir 1.20.5, Node, OpenSpec 2.0.0) and the Phoenix 1.8 project, generated with `mix phx.new . --app smelt --no-mailer --no-gettext`. The `smelt_dev` and `smelt_test` databases exist.
 - 1.4: first commit, pushed to the private repo `github.com/fabianskier/smelt`.
 - 1.5: `openspec init --tools claude`, project rules in `openspec/config.yaml`, `CLAUDE.md`, and docs split into `README.md` + `docs/`.
+- 1.6: `DATABASE_URL` set in `mise.toml` `[env]` and read in `config/runtime.exs` (dev only; tests keep `smelt_test` from `config/test.exs`).
 
 **Next:**
-1. **1.6:** `DATABASE_URL` in `config/runtime.exs`, with its value in `mise.toml` (`[env]`).
-2. **1.7:** add Oban.
-3. **1.8:** first OpenSpec change: `Smelt.Runner` (behaviour + Claude Code implementation via Port) and the stream in LiveView.
+1. **1.7:** add Oban.
+2. **1.8:** first OpenSpec change: `Smelt.Runner` (behaviour + Claude Code implementation via Port) and the stream in LiveView.
 
 **Notes:**
 - Hex, rebar3 and `phx_new` live inside mise's Elixir install: reinstall them when the Elixir version changes.
