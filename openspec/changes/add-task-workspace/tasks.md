@@ -7,7 +7,7 @@
 
 ## 2. Identifiers, naming and metadata (pure)
 
-- [ ] 2.1 Define the `%Smelt.Workspace{}` struct with typespecs, plus identifier validation and the naming functions (branch `smelt/<change>/<task-id>`, directory `<root>/<repo-name>-<hash8>/<change>/<task-id>`, metadata `<…>/<task-id>.json`, default root from `XDG_DATA_HOME` or `~/.local/share`); verify with unit tests for valid and invalid change names and task ids (`../escape`, `Add_X`, `1..2`, `main`, `2.`), deterministic paths for the same repo, and different hashes for two repos with the same name; document the naming, location and metadata of workspaces in a new `Smelt.Workspace` entry in `docs/architecture.md`
+- [x] 2.1 Define the `%Smelt.Workspace{}` struct with typespecs, plus identifier validation and the naming functions (branch `smelt/<change>/<task-id>`, directory `<root>/<repo-name>-<hash8>/<change>/<task-id>`, metadata `<…>/<task-id>.json`, default root from `XDG_DATA_HOME` or `~/.local/share`); verify with unit tests for valid and invalid change names and task ids (`../escape`, `Add_X`, `1..2`, `main`, `2.`), deterministic paths for the same repo, and different hashes for two repos with the same name; document the naming, location and metadata of workspaces in a new `Smelt.Workspace` entry in `docs/architecture.md`
 
 ## 3. Create and fetch
 
