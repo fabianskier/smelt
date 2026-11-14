@@ -11,8 +11,8 @@
 
 ## 3. Create and fetch
 
-- [ ] 3.1 Implement `Smelt.Workspace.create/4` (resolve the main checkout, verify the base, check for an existing branch or directory, `worktree add -b` at `base_sha`, write metadata, roll back on failure) and `fetch/4`, with tests grouped as `describe "Requirement: <name>"` / `test "Scenario: <name>"`; verify with tests for "Workspace is created from the base branch", "Another base branch is used", "Base branch does not exist", "Not a git repository", "Task already has a workspace", "Change name with a path separator", "Malformed task id", "Workspace is found again" and "Workspace does not exist"; document `create/4`, `fetch/4`, their options and error values in the `Smelt.Workspace` entry of `docs/architecture.md`
-- [ ] 3.2 Add a test that `create` rolls back when the step after `worktree add` fails (for example, when the metadata directory is not writable): no directory, branch or metadata is left behind and the error is returned
+- [x] 3.1 Implement `Smelt.Workspace.create/4` (resolve the main checkout, verify the base, check for an existing branch or directory, `worktree add -b` at `base_sha`, write metadata, roll back on failure) and `fetch/4`, with tests grouped as `describe "Requirement: <name>"` / `test "Scenario: <name>"`; verify with tests for "Workspace is created from the base branch", "Another base branch is used", "Base branch does not exist", "Not a git repository", "Task already has a workspace", "Change name with a path separator", "Malformed task id", "Workspace is found again" and "Workspace does not exist"; document `create/4`, `fetch/4`, their options and error values in the `Smelt.Workspace` entry of `docs/architecture.md`
+- [x] 3.2 Add a test that `create` rolls back when the step after `worktree add` fails (for example, when the metadata directory is not writable): no directory, branch or metadata is left behind and the error is returned
 
 ## 4. List and remove
 

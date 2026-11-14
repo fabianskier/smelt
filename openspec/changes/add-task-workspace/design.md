@@ -28,7 +28,7 @@ Relevant facts:
 
 ```elixir
 Smelt.Workspace.create(repo, change, task_id, opts)  # {:ok, %Workspace{}} | {:error, reason}
-Smelt.Workspace.fetch(repo, change, task_id, opts)   # {:ok, %Workspace{}} | {:error, :not_found}
+Smelt.Workspace.fetch(repo, change, task_id, opts)   # {:ok, %Workspace{}} | {:error, :not_found | reason}
 Smelt.Workspace.list(repo, opts)                     # {:ok, [%Workspace{}]} | {:error, reason}
 Smelt.Workspace.remove(repo, change, task_id, opts)  # {:ok, :removed | :branch_kept | :absent} | {:error, reason}
 ```
@@ -37,7 +37,9 @@ Smelt.Workspace.remove(repo, change, task_id, opts)  # {:ok, :removed | :branch_
 
 Options: `:base` (create only, default `"main"`), `:root` (workspaces root, default from config), `:force` (remove only, default `false`).
 
-Errors: `:not_a_repository`, `{:unknown_base, base}`, `:already_exists`, `{:invalid_identifier, :change | :task_id}`, and `{:git, args, exit_status, output}` for unexpected git failures.
+Errors: `:not_a_repository`, `{:unknown_base, base}`, `:already_exists`, `{:invalid_identifier, :change | :task_id}`, `{:metadata, posix_reason}` when the metadata file can't be written, and `{:git, args, exit_status, output}` for unexpected git failures. `fetch/4` returns `:not_found` for a missing workspace, and the same identifier and `:not_a_repository` errors as `create/4` for bad input, so a typo is not mistaken for a workspace that doesn't exist.
+
+`repo` may be any path inside the project or one of its worktrees. It is resolved to the main checkout (the parent of `git rev-parse --git-common-dir`), so the same project always gets the same hash.
 
 - **Why plain functions, not a GenServer per workspace:** a workspace is state on disk, not a running process. The future pipeline state machine owns the lifecycle and calls these functions.
 - **Why `:root` as an option:** tests pass their own `tmp_dir` and stay `async: true` without touching global app env.

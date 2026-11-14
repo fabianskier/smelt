@@ -84,6 +84,14 @@ defmodule Smelt.GitRepo do
   @spec current_branch(Path.t()) :: String.t()
   def current_branch(repo), do: repo |> git!(["branch", "--show-current"]) |> String.trim()
 
+  @doc "Returns the names of the local branches, sorted."
+  @spec branches(Path.t()) :: [String.t()]
+  def branches(repo) do
+    repo
+    |> git!(["for-each-ref", "--format=%(refname:short)", "refs/heads"])
+    |> String.split("\n", trim: true)
+  end
+
   @doc "Returns `git status --porcelain` output (empty for a clean checkout)."
   @spec status(Path.t()) :: String.t()
   def status(repo), do: git!(repo, ["status", "--porcelain"])
