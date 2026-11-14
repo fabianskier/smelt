@@ -16,9 +16,9 @@
 
 ## 4. List and remove
 
-- [ ] 4.1 Implement `list/2` (parse `git worktree list --porcelain`, keep only `smelt/` branches with metadata); verify with the test for "Only managed workspaces are listed"
-- [ ] 4.2 Implement `remove/4` (`worktree remove --force` or `worktree prune`, `merge-base --is-ancestor` against the base, `branch -D` when merged or forced, delete metadata, return `:removed`, `:branch_kept` or `:absent`); verify with tests for "Workspace without new commits is removed", "Unmerged branch is kept", "Forced removal deletes an unmerged branch", "Removing a missing workspace", and a removal after the workspace directory was deleted by hand; document `list/2` and `remove/4` (including `:force` and the return values) in the `Smelt.Workspace` entry of `docs/architecture.md`
-- [ ] 4.3 Add the test for "Checkout with uncommitted work is preserved" (a checkout on a non-`main` branch with modified and untracked files, then a workspace is created and removed, and the branch and `git status --porcelain` output are unchanged)
+- [x] 4.1 Implement `list/2` (parse `git worktree list --porcelain`, keep only `smelt/` branches with metadata); verify with the test for "Only managed workspaces are listed"
+- [x] 4.2 Implement `remove/4` (`worktree remove --force` or `worktree prune`, `merge-base --is-ancestor` against the base, `branch -D` when merged or forced, delete metadata, return `:removed`, `:branch_kept` or `:absent`); verify with tests for "Workspace without new commits is removed", "Unmerged branch is kept", "Forced removal deletes an unmerged branch", "Removing a missing workspace", and a removal after the workspace directory was deleted by hand; document `list/2` and `remove/4` (including `:force` and the return values) in the `Smelt.Workspace` entry of `docs/architecture.md`
+- [x] 4.3 Add the test for "Checkout with uncommitted work is preserved" (a checkout on a non-`main` branch with modified and untracked files, then a workspace is created and removed, and the branch and `git status --porcelain` output are unchanged)
 
 ## 5. Concurrency
 

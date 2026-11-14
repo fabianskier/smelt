@@ -127,22 +127,172 @@ defmodule Smelt.Workspace do
          {:ok, repo} <- main_checkout(repo) do
       branch = branch_name(change, task_id)
 
-      with true <- worktree_on_branch?(repo, branch),
-           {:ok, meta} <- read_metadata(metadata_path(root, repo, change, task_id)) do
-        {:ok,
-         %__MODULE__{
-           repo: repo,
-           change: change,
-           task_id: task_id,
-           path: workspace_path(root, repo, change, task_id),
-           branch: branch,
-           base: meta["base"],
-           base_sha: meta["base_sha"]
-         }}
+      with {:ok, worktrees} <- worktrees(repo),
+           true <- Map.has_key?(worktrees, branch),
+           {:ok, ws} <- load(root, repo, change, task_id) do
+        {:ok, ws}
       else
         _ -> {:error, :not_found}
       end
     end
+  end
+
+  @doc """
+  Lists the workspaces Smelt manages in `repo`, sorted by change and task id.
+
+  Only worktrees on a `smelt/<change>/<task-id>` branch that have a metadata
+  file are included, so worktrees and branches the user created by hand are
+  never listed. Accepts the `:root` option, like `create/4`.
+  """
+  @spec list(Path.t(), keyword()) ::
+          {:ok, [t()]} | {:error, :not_a_repository | Smelt.Git.error()}
+  def list(repo, opts \\ []) do
+    root = root(opts)
+
+    with {:ok, repo} <- main_checkout(repo),
+         {:ok, worktrees} <- worktrees(repo) do
+      workspaces =
+        for branch <- Map.keys(worktrees),
+            {change, task_id} <- parse_branch(branch),
+            {:ok, ws} <- [load(root, repo, change, task_id)] do
+          ws
+        end
+
+      {:ok, Enum.sort_by(workspaces, &{&1.change, task_id_sort_key(&1.task_id)})}
+    end
+  end
+
+  @doc """
+  Removes a task's workspace: its directory (including uncommitted and
+  untracked files), its metadata file and, when its work is safe to drop,
+  its branch.
+
+  The branch is deleted when it has no commits that are not in the base
+  branch, or when `force: true` is given. Otherwise it is kept, so finished
+  but unmerged work is never lost, and the result says so.
+
+  Returns:
+
+    * `{:ok, :removed}` - everything is gone
+    * `{:ok, :branch_kept}` - the directory is gone, the unmerged branch stays
+    * `{:ok, :absent}` - there was nothing to remove
+
+  Accepts the `:root` and `:force` (default `false`) options. A directory
+  deleted by hand is handled: git's stale record of it is pruned.
+  """
+  @spec remove(Path.t(), String.t(), String.t(), keyword()) ::
+          {:ok, :removed | :branch_kept | :absent}
+          | {:error, identifier_error() | :not_a_repository | Smelt.Git.error()}
+  def remove(repo, change, task_id, opts \\ []) do
+    root = root(opts)
+    force? = Keyword.get(opts, :force, false)
+
+    with :ok <- validate_identifiers(change, task_id),
+         {:ok, repo} <- main_checkout(repo),
+         {:ok, worktrees} <- worktrees(repo) do
+      path = workspace_path(root, repo, change, task_id)
+      meta_path = metadata_path(root, repo, change, task_id)
+      branch = branch_name(change, task_id)
+
+      meta =
+        case read_metadata(meta_path) do
+          {:ok, meta} -> meta
+          {:error, _} -> nil
+        end
+
+      found? =
+        Map.has_key?(worktrees, branch) or branch_exists?(repo, branch) or
+          File.exists?(path) or File.exists?(meta_path)
+
+      with :ok <- remove_worktree(repo, Map.get(worktrees, branch), path),
+           {:ok, branch_result} <- remove_branch(repo, branch, meta, force?) do
+        _ = File.rm(meta_path)
+
+        cond do
+          not found? -> {:ok, :absent}
+          branch_result == :kept -> {:ok, :branch_kept}
+          true -> {:ok, :removed}
+        end
+      end
+    end
+  end
+
+  # A registered worktree is removed by git; `--force` because a workspace
+  # normally has untracked build output. If its directory was deleted by hand,
+  # git only needs to forget it. A leftover directory git doesn't know about
+  # is deleted directly: its path is derived from validated identifiers, so it
+  # is always inside the workspaces root.
+  defp remove_worktree(repo, registered_path, path) do
+    result =
+      cond do
+        registered_path && File.dir?(registered_path) ->
+          Git.cmd(repo, ["worktree", "remove", "--force", registered_path])
+
+        registered_path ->
+          Git.cmd(repo, ["worktree", "prune"])
+
+        true ->
+          {:ok, ""}
+      end
+
+    with {:ok, _} <- result do
+      _ = File.rm_rf(path)
+      :ok
+    end
+  end
+
+  # `git branch -d` is not used: it checks the branch against the main
+  # checkout's HEAD, not against the workspace's base.
+  defp remove_branch(repo, branch, meta, force?) do
+    cond do
+      not branch_exists?(repo, branch) ->
+        {:ok, :none}
+
+      force? or merged?(repo, branch, meta) ->
+        with {:ok, _} <- Git.cmd(repo, ["branch", "-D", branch]), do: {:ok, :deleted}
+
+      true ->
+        {:ok, :kept}
+    end
+  end
+
+  # Without metadata the base is unknown, so the branch is treated as unmerged.
+  defp merged?(_repo, _branch, nil), do: false
+
+  defp merged?(repo, branch, %{"base" => base}) do
+    match?({:ok, _}, Git.cmd(repo, ["merge-base", "--is-ancestor", branch, base]))
+  end
+
+  defp load(root, repo, change, task_id) do
+    with {:ok, meta} <- read_metadata(metadata_path(root, repo, change, task_id)) do
+      {:ok,
+       %__MODULE__{
+         repo: repo,
+         change: change,
+         task_id: task_id,
+         path: workspace_path(root, repo, change, task_id),
+         branch: branch_name(change, task_id),
+         base: meta["base"],
+         base_sha: meta["base_sha"]
+       }}
+    end
+  end
+
+  # Returns the change and task id encoded in a managed branch name, as a
+  # list so it can be used as a comprehension generator.
+  defp parse_branch(@branch_prefix <> rest) do
+    with [change, task_id] <- String.split(rest, "/"),
+         :ok <- validate_identifiers(change, task_id) do
+      [{change, task_id}]
+    else
+      _ -> []
+    end
+  end
+
+  defp parse_branch(_branch), do: []
+
+  defp task_id_sort_key(task_id) do
+    task_id |> String.split(".") |> Enum.map(&String.to_integer/1)
   end
 
   defp root(opts), do: opts |> Keyword.get_lazy(:root, &default_root/0) |> Path.expand()
@@ -207,10 +357,27 @@ defmodule Smelt.Workspace do
     error
   end
 
-  defp worktree_on_branch?(repo, branch) do
-    case Git.cmd(repo, ["worktree", "list", "--porcelain"]) do
-      {:ok, output} -> String.contains?(output, "\nbranch refs/heads/#{branch}\n")
-      {:error, _} -> false
+  # Returns the repository's worktrees that are on a branch, as a map of
+  # branch name to worktree path. Git allows a branch in only one worktree.
+  #
+  # `git worktree list --porcelain` prints one block per worktree, separated
+  # by blank lines:
+  #
+  #     worktree /path/to/worktree
+  #     HEAD <sha>
+  #     branch refs/heads/<branch>
+  defp worktrees(repo) do
+    with {:ok, output} <- Git.cmd(repo, ["worktree", "list", "--porcelain"]) do
+      worktrees =
+        for block <- String.split(output, "\n\n", trim: true),
+            lines = String.split(block, "\n", trim: true),
+            "worktree " <> path <- Enum.take(lines, 1),
+            "branch refs/heads/" <> branch <- lines,
+            into: %{} do
+          {branch, path}
+        end
+
+      {:ok, worktrees}
     end
   end
 

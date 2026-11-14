@@ -124,6 +124,114 @@ defmodule Smelt.WorkspaceTest do
     end
   end
 
+  describe "Requirement: List managed workspaces" do
+    test "Scenario: Only managed workspaces are listed", ctx do
+      {:ok, ws1} = Workspace.create(ctx.repo, "add-x", "2.1", ctx.opts)
+      {:ok, ws2} = Workspace.create(ctx.repo, "add-x", "10", ctx.opts)
+
+      # A worktree the user created by hand, and a look-alike branch with no
+      # metadata: neither belongs to Smelt.
+      :ok = GitRepo.add_worktree!(ctx.repo, Path.join(ctx.tmp_dir, "mine"), "mine")
+      :ok = GitRepo.add_worktree!(ctx.repo, Path.join(ctx.tmp_dir, "fake"), "smelt/add-x/3")
+
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, [ws1, ws2]}
+    end
+
+    test "a repository without workspaces has an empty list", ctx do
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, []}
+    end
+  end
+
+  describe "Requirement: Remove a workspace" do
+    test "Scenario: Workspace without new commits is removed", ctx do
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      # Uncommitted and untracked files don't block removal.
+      :ok = GitRepo.write!(ws.path, "README.md", "changed\n")
+      :ok = GitRepo.write!(ws.path, "_build/out.txt", "build output\n")
+
+      assert Workspace.remove(ctx.repo, "add-x", "1", ctx.opts) == {:ok, :removed}
+
+      refute File.exists?(ws.path)
+      refute File.exists?(Workspace.metadata_path(ctx.root, ctx.repo, "add-x", "1"))
+      assert GitRepo.branches(ctx.repo) == ["main"]
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, []}
+    end
+
+    test "Scenario: Unmerged branch is kept", ctx do
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      work_sha = GitRepo.commit!(ws.path, "task work", %{"lib/x.ex" => "x"})
+
+      assert Workspace.remove(ctx.repo, "add-x", "1", ctx.opts) == {:ok, :branch_kept}
+
+      refute File.exists?(ws.path)
+      assert GitRepo.sha!(ctx.repo, ws.branch) == work_sha
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, []}
+      # The kept branch still blocks re-creating the task.
+      assert Workspace.create(ctx.repo, "add-x", "1", ctx.opts) == {:error, :already_exists}
+    end
+
+    test "Scenario: Forced removal deletes an unmerged branch", ctx do
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      _ = GitRepo.commit!(ws.path, "task work", %{"lib/x.ex" => "x"})
+
+      assert Workspace.remove(ctx.repo, "add-x", "1", Keyword.put(ctx.opts, :force, true)) ==
+               {:ok, :removed}
+
+      refute File.exists?(ws.path)
+      assert GitRepo.branches(ctx.repo) == ["main"]
+    end
+
+    test "Scenario: Removing a missing workspace", ctx do
+      {:ok, other} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+
+      assert Workspace.remove(ctx.repo, "add-x", "2", ctx.opts) == {:ok, :absent}
+
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, [other]}
+      assert GitRepo.branches(ctx.repo) == ["main", other.branch]
+    end
+
+    test "a branch merged into the base after its work is deleted", ctx do
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      _ = GitRepo.commit!(ws.path, "task work", %{"lib/x.ex" => "x"})
+      :ok = GitRepo.merge!(ctx.repo, ws.branch)
+
+      assert Workspace.remove(ctx.repo, "add-x", "1", ctx.opts) == {:ok, :removed}
+      assert GitRepo.branches(ctx.repo) == ["main"]
+    end
+
+    test "a workspace whose directory was deleted by hand is cleaned up", ctx do
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      File.rm_rf!(ws.path)
+
+      assert Workspace.remove(ctx.repo, "add-x", "1", ctx.opts) == {:ok, :removed}
+
+      assert GitRepo.branches(ctx.repo) == ["main"]
+      refute GitRepo.worktree_paths(ctx.repo) |> Enum.any?(&String.ends_with?(&1, "/add-x/1"))
+      assert {:ok, _} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+    end
+  end
+
+  describe "Requirement: Leave the user's checkout untouched" do
+    test "Scenario: Checkout with uncommitted work is preserved", ctx do
+      :ok = GitRepo.branch!(ctx.repo, "wip")
+      :ok = GitRepo.checkout!(ctx.repo, "wip")
+      :ok = GitRepo.write!(ctx.repo, "README.md", "my local edit\n")
+      :ok = GitRepo.write!(ctx.repo, "scratch/notes.txt", "untracked\n")
+      status = GitRepo.status(ctx.repo)
+      head = GitRepo.sha!(ctx.repo, "HEAD")
+
+      {:ok, ws} = Workspace.create(ctx.repo, "add-x", "1", ctx.opts)
+      _ = GitRepo.commit!(ws.path, "task work", %{"lib/x.ex" => "x"})
+      {:ok, :branch_kept} = Workspace.remove(ctx.repo, "add-x", "1", ctx.opts)
+
+      assert GitRepo.current_branch(ctx.repo) == "wip"
+      assert GitRepo.sha!(ctx.repo, "HEAD") == head
+      assert GitRepo.status(ctx.repo) == status
+      assert status == " M README.md\n?? scratch/\n"
+      assert File.read!(Path.join(ctx.repo, "README.md")) == "my local edit\n"
+    end
+  end
+
   describe "create/4 rollback" do
     test "removes the worktree and branch when writing the metadata fails", ctx do
       # A directory where the metadata file should go makes File.write/2 fail

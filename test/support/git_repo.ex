@@ -84,6 +84,32 @@ defmodule Smelt.GitRepo do
   @spec current_branch(Path.t()) :: String.t()
   def current_branch(repo), do: repo |> git!(["branch", "--show-current"]) |> String.trim()
 
+  @doc "Merges `branch` into the checked-out branch with a merge commit."
+  @spec merge!(Path.t(), String.t()) :: :ok
+  def merge!(repo, branch) do
+    git!(repo, @identity ++ ["merge", "--quiet", "--no-ff", "--no-edit", branch])
+    :ok
+  end
+
+  @doc "Adds a worktree at `path` on a new branch, like a user would by hand."
+  @spec add_worktree!(Path.t(), Path.t(), String.t()) :: :ok
+  def add_worktree!(repo, path, branch) do
+    git!(repo, ["worktree", "add", "--quiet", "-b", branch, path])
+    :ok
+  end
+
+  @doc "Returns the paths of all worktrees git knows about, the main checkout first."
+  @spec worktree_paths(Path.t()) :: [Path.t()]
+  def worktree_paths(repo) do
+    repo
+    |> git!(["worktree", "list", "--porcelain"])
+    |> String.split("\n")
+    |> Enum.flat_map(fn
+      "worktree " <> path -> [path]
+      _ -> []
+    end)
+  end
+
   @doc "Returns the names of the local branches, sorted."
   @spec branches(Path.t()) :: [String.t()]
   def branches(repo) do
