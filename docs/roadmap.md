@@ -22,12 +22,10 @@ Stage 1 (skeleton) complete for CLI use. Stage 2 in progress: workspaces done, g
 - 1.6: `DATABASE_URL` set in `mise.toml` `[env]` and read in `config/runtime.exs` (dev only; tests keep `smelt_test` from `config/test.exs`).
 - 1.7: Oban 2.24 (Postgres, Basic engine, migration v14) with queues `claude: 1`, `local: 1`, plus Pruner (7 days) and Lifeline plugins. Tests use `testing: :manual`.
 - 1.8a: OpenSpec change `add-agent-runner` (archived 2026-11-13): `Smelt.Runner` behaviour, Claude Code implementation via a supervised `Port` session, events over PubSub, cleanup of the agent process. Spec: `openspec/specs/agent-runner/spec.md`.
-
-- 2.1: OpenSpec change `add-task-workspace` (implemented on branch `add-task-workspace`, not merged or archived yet): `Smelt.Git` wrapper and `Smelt.Workspace` (`create`, `fetch`, `list`, `remove`), one git worktree per task outside the project, with base commit metadata and a per-repo lock. Checked end to end against a scratch clone with a real Claude Code run. Spec: `openspec/changes/add-task-workspace/specs/task-workspace/spec.md`.
+- 2.1: OpenSpec change `add-task-workspace` (archived 2026-11-13): `Smelt.Git` wrapper and `Smelt.Workspace` (`create`, `fetch`, `list`, `remove`), one git worktree per task outside the project, with base commit metadata and a per-repo lock. Checked end to end against a scratch clone with a real Claude Code run. Spec: `openspec/specs/task-workspace/spec.md`.
 
 **Next:**
 1. **Stage 2, CLI first:** one task end to end (worktree → build → gate → approval → merge), driven and approved from the terminal (`mix` tasks / `iex`), with no new web UI.
-   - Merge and archive `add-task-workspace`.
    - 2.2: OpenSpec change `add-deterministic-gate`.
 
 **Notes:**
