@@ -2,7 +2,7 @@
 
 ## 1. Git wrapper and test support
 
-- [ ] 1.1 Implement `Smelt.Git.cmd/2` (runs `git -C <repo>`, merges stderr, base env `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C` plus `config :smelt, Smelt.Git, env: …`, returns `{:ok, output}` or `{:error, {:git, args, status, output}}`), and set `GIT_CONFIG_GLOBAL=/dev/null` and `GIT_CONFIG_NOSYSTEM=1` for it in `config/test.exs`; verify with tests for a successful command, a failing command's error tuple, and that the global config is ignored (a `GIT_CONFIG_GLOBAL` value is not visible to `git config --get`)
+- [x] 1.1 Implement `Smelt.Git.cmd/2` (runs `git -C <repo>`, merges stderr, base env `GIT_TERMINAL_PROMPT=0` and `LC_ALL=C` plus `config :smelt, Smelt.Git, env: …`, returns `{:ok, output}` or `{:error, {:git, args, status, output}}`), and set `GIT_CONFIG_GLOBAL=/dev/null` and `GIT_CONFIG_NOSYSTEM=1` for it in `config/test.exs`; verify with tests for a successful command, a failing command's error tuple, and that the global config is ignored (a `GIT_CONFIG_GLOBAL` value is not visible to `git config --get`)
 - [ ] 1.2 Add `test/support/git_repo.ex` with helpers to init a repo with an initial commit on `main`, add commits and branches, create modified and untracked files, and read a repo's current branch and status (all commits use `-c user.name/-c user.email/-c commit.gpgsign=false`); verify by using them in the 1.1 tests and with `mix test` passing
 
 ## 2. Identifiers, naming and metadata (pure)

@@ -7,6 +7,9 @@ config :smelt, Oban, testing: :manual
 config :smelt, Smelt.Runner.ClaudeCode,
   executable: Path.expand("../test/support/fake_claude", __DIR__)
 
+# Ignore the developer's global and system git config in tests.
+config :smelt, Smelt.Git, env: [{"GIT_CONFIG_GLOBAL", "/dev/null"}, {"GIT_CONFIG_NOSYSTEM", "1"}]
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
