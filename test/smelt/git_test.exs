@@ -2,12 +2,12 @@ defmodule Smelt.GitTest do
   use ExUnit.Case, async: true
 
   alias Smelt.Git
+  alias Smelt.GitRepo
 
   @moduletag :tmp_dir
 
   setup %{tmp_dir: tmp_dir} do
-    {_, 0} = System.cmd("git", ["init", "--quiet", "--initial-branch=main", tmp_dir])
-    %{repo: tmp_dir}
+    %{repo: GitRepo.init!(tmp_dir)}
   end
 
   describe "cmd/2" do
@@ -25,18 +25,19 @@ defmodule Smelt.GitTest do
     test "runs in the given repository, not the current directory", %{repo: repo} do
       {:ok, toplevel} = Git.cmd(repo, ["rev-parse", "--show-toplevel"])
 
-      assert toplevel |> String.trim() |> resolve() == resolve(repo)
+      assert String.trim(toplevel) == repo
+    end
+
+    test "sees the repository's commits and branches", %{repo: repo} do
+      sha = GitRepo.commit!(repo, "add lib", %{"lib/a.ex" => "a"})
+      :ok = GitRepo.branch!(repo, "feature")
+
+      assert Git.cmd(repo, ["rev-parse", "feature"]) == {:ok, sha <> "\n"}
     end
 
     test "ignores the user's global git config", %{repo: repo} do
       assert {:error, {:git, _, 1, ""}} =
                Git.cmd(repo, ["config", "--global", "--get", "user.name"])
     end
-  end
-
-  # macOS tmp paths may go through a symlink (/var -> /private/var).
-  defp resolve(path) do
-    {resolved, 0} = System.cmd("realpath", [path])
-    String.trim(resolved)
   end
 end
