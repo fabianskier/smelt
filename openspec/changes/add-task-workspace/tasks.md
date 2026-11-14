@@ -26,8 +26,8 @@
 
 ## 6. Integration
 
-- [ ] 6.1 Run one manual check in `iex -S mix` against a scratch clone of a real repo: create a workspace, run `Smelt.Runner.ClaudeCode.run("Reply with exactly: ok", cwd: ws.path)`, then remove it; confirm the clone's checkout is unchanged. This is not part of the automated suite
-- [ ] 6.2 Update the stage 2 status in `docs/roadmap.md`; verify `mix precommit` and `openspec validate add-task-workspace --strict` pass
+- [x] 6.1 Run one manual check in `iex -S mix` against a scratch clone of a real repo: create a workspace, run `Smelt.Runner.ClaudeCode.run("Reply with exactly: ok", cwd: ws.path)`, then remove it; confirm the clone's checkout is unchanged. This is not part of the automated suite
+- [x] 6.2 Update the stage 2 status in `docs/roadmap.md`; verify `mix precommit` and `openspec validate add-task-workspace --strict` pass
 
 ## Workflow follow-up
 
