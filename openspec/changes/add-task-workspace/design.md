@@ -87,7 +87,8 @@ Under the repo lock:
 
 Operations that change git state (`create`, `remove`) run inside `:global.trans({{Smelt.Workspace, repo}, self()}, fun)`, keyed on the resolved repo path. `fetch` and `list` don't take the lock.
 
-- **Why:** concurrent `git worktree add` calls in the same repo can fail on git's lock files (`config.lock`, `.git/worktrees/*`). Serializing makes each call behave as if it ran alone, which the spec requires. The lock is held for milliseconds.
+- **Why:** `create` and `remove` check the repo's state and then change it. Without the lock, two creations of the same task both pass the existence check, and the loser fails inside `git worktree add` with a raw `{:git, …}` error instead of `:already_exists` (reproduced 10 out of 10 times with 6 concurrent creations). Serializing makes each call behave as if it ran alone, which the spec requires. The lock is held for the duration of a few git commands.
+- **Not the reason:** git's own lock files. A stress run of 40 concurrent `worktree add` calls for different tasks never failed without the lock (git 2.54): each worktree has its own admin directory and each branch its own ref lock.
 - **Alternative:** a GenServer per repo under a Registry. Rejected for now: it adds a supervised process with no other state. If stage 5 needs a per-repo process (merge queue), the lock can move into it.
 
 ### 7. Git wrapper

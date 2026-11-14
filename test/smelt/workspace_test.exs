@@ -232,6 +232,57 @@ defmodule Smelt.WorkspaceTest do
     end
   end
 
+  describe "Requirement: Concurrent operations are safe" do
+    test "Scenario: Concurrent creation for different tasks", ctx do
+      task_ids = Enum.map(1..8, &Integer.to_string/1)
+
+      results =
+        task_ids
+        |> Enum.map(fn task_id ->
+          Task.async(fn -> Workspace.create(ctx.repo, "add-x", task_id, ctx.opts) end)
+        end)
+        |> Task.await_many(30_000)
+
+      assert Enum.all?(results, &match?({:ok, _}, &1)), inspect(results, pretty: true)
+
+      workspaces = Enum.map(results, fn {:ok, ws} -> ws end)
+      assert workspaces |> Enum.map(& &1.path) |> Enum.uniq() |> length() == 8
+      assert workspaces |> Enum.map(& &1.branch) |> Enum.uniq() |> length() == 8
+      assert Workspace.list(ctx.repo, ctx.opts) == {:ok, workspaces}
+    end
+
+    test "concurrent creation of the same task: one wins, the rest see it exists", ctx do
+      results =
+        1..6
+        |> Enum.map(fn _ ->
+          Task.async(fn -> Workspace.create(ctx.repo, "add-x", "1", ctx.opts) end)
+        end)
+        |> Task.await_many(30_000)
+
+      assert Enum.count(results, &match?({:ok, _}, &1)) == 1
+      assert Enum.count(results, &(&1 == {:error, :already_exists})) == 5
+    end
+
+    test "concurrent creation and removal in one repository", ctx do
+      for task_id <- ~w(1 2 3 4),
+          do: {:ok, _} = Workspace.create(ctx.repo, "add-x", task_id, ctx.opts)
+
+      removals =
+        for task_id <- ~w(1 2 3 4),
+            do: Task.async(fn -> Workspace.remove(ctx.repo, "add-x", task_id, ctx.opts) end)
+
+      creations =
+        for task_id <- ~w(5 6 7 8),
+            do: Task.async(fn -> Workspace.create(ctx.repo, "add-x", task_id, ctx.opts) end)
+
+      assert Task.await_many(removals, 30_000) == List.duplicate({:ok, :removed}, 4)
+      assert Task.await_many(creations, 30_000) |> Enum.all?(&match?({:ok, _}, &1))
+
+      {:ok, listed} = Workspace.list(ctx.repo, ctx.opts)
+      assert Enum.map(listed, & &1.task_id) == ~w(5 6 7 8)
+    end
+  end
+
   describe "create/4 rollback" do
     test "removes the worktree and branch when writing the metadata fails", ctx do
       # A directory where the metadata file should go makes File.write/2 fail

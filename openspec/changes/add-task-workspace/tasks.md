@@ -22,7 +22,7 @@
 
 ## 5. Concurrency
 
-- [ ] 5.1 Wrap `create` and `remove` in a per-repo `:global.trans` lock; verify with the test for "Concurrent creation for different tasks" (at least 8 `Task.async` creations in one repo, all `{:ok, _}`, with distinct paths and branches, and `list/2` returning all of them)
+- [x] 5.1 Wrap `create` and `remove` in a per-repo `:global.trans` lock; verify with the test for "Concurrent creation for different tasks" (at least 8 `Task.async` creations in one repo, all `{:ok, _}`, with distinct paths and branches, and `list/2` returning all of them)
 
 ## 6. Integration
 

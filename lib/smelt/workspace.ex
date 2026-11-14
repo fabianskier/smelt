@@ -89,8 +89,13 @@ defmodule Smelt.Workspace do
     root = root(opts)
 
     with :ok <- validate_identifiers(change, task_id),
-         {:ok, repo} <- main_checkout(repo),
-         {:ok, base_sha} <- resolve_base(repo, base) do
+         {:ok, repo} <- main_checkout(repo) do
+      with_repo_lock(repo, fn -> do_create(repo, change, task_id, base, root) end)
+    end
+  end
+
+  defp do_create(repo, change, task_id, base, root) do
+    with {:ok, base_sha} <- resolve_base(repo, base) do
       ws = %__MODULE__{
         repo: repo,
         change: change,
@@ -188,8 +193,13 @@ defmodule Smelt.Workspace do
     force? = Keyword.get(opts, :force, false)
 
     with :ok <- validate_identifiers(change, task_id),
-         {:ok, repo} <- main_checkout(repo),
-         {:ok, worktrees} <- worktrees(repo) do
+         {:ok, repo} <- main_checkout(repo) do
+      with_repo_lock(repo, fn -> do_remove(repo, change, task_id, root, force?) end)
+    end
+  end
+
+  defp do_remove(repo, change, task_id, root, force?) do
+    with {:ok, worktrees} <- worktrees(repo) do
       path = workspace_path(root, repo, change, task_id)
       meta_path = metadata_path(root, repo, change, task_id)
       branch = branch_name(change, task_id)
@@ -293,6 +303,16 @@ defmodule Smelt.Workspace do
 
   defp task_id_sort_key(task_id) do
     task_id |> String.split(".") |> Enum.map(&String.to_integer/1)
+  end
+
+  # `create` and `remove` check the repository's state and then change it.
+  # Serializing them per repository makes that check-then-act atomic, so each
+  # call behaves as if it ran alone: two creations of the same task give one
+  # workspace and one `:already_exists`, never a raw git error. `fetch` and
+  # `list` only read and don't take the lock. The lock is held for the
+  # duration of a few git commands.
+  defp with_repo_lock(repo, fun) do
+    :global.trans({{__MODULE__, repo}, self()}, fun, [node()])
   end
 
   defp root(opts), do: opts |> Keyword.get_lazy(:root, &default_root/0) |> Path.expand()
