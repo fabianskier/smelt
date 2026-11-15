@@ -93,7 +93,7 @@ One retry, in the same session (`--resume`), so the agent keeps its context of w
    - Not found: `git update-ref refs/heads/<base> <task sha> <old base sha>`, which also fails if the base moved meanwhile.
 4. **Remove** the workspace (`Smelt.Workspace.remove/4`); the branch is now merged, so it is deleted.
 
-Steps 1 to 3 run under the workspace's per-repo lock? No: they touch the workspace branch and the base branch, not git's worktree list, and the CLI runs one task at a time. The merge queue (stage 5) will serialize merges.
+Steps 1 to 3 don't take the workspace's per-repo lock: they change the task's branch and the base branch, not git's worktree list, and the CLI runs one task at a time. The merge queue (stage 5) will serialize merges.
 
 - **Why fast-forward only:** the base branch's history stays linear, like Smelt's own, and a fast-forward can't create a merge conflict in the user's checkout.
 - **Why refuse a dirty checkout instead of stashing:** stashing and re-applying the user's work can conflict or lose it. Refusing costs one manual step.
