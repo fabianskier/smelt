@@ -31,7 +31,7 @@ The system SHALL give the agent a prompt that names the change, the task id and 
 - **THEN** the agent's prompt contains the change name, the task id, the task's description and the path of the change's `tasks.md`
 
 ### Requirement: Limit the agent's permissions
-The system SHALL run the agent allowing only reading, searching and editing files, and running `mix`, `git` and the project's checks script. Pushing with git MUST be denied.
+The system SHALL run the agent allowing only reading, searching and editing files, and running `mix` (also prefixed with `MIX_ENV=test`), `elixir`, `erl`, `git` and the project's checks script. Pushing with git MUST be denied.
 
 #### Scenario: Agent permissions
 - **WHEN** a task is run
