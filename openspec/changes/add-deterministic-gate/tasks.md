@@ -23,7 +23,7 @@
 
 ## 6. Smelt's own gate and integration
 
-- [ ] 6.1 Add `.smelt/checks.sh` to Smelt (deps, compile with warnings as errors, format check, tests) and run it by hand from the main checkout; verify it exits 0
+- [x] 6.1 Add `.smelt/checks.sh` to Smelt (deps, compile with warnings as errors, format check, tests) and run it by hand from the main checkout; verify it exits 0
 - [ ] 6.2 Run one manual check in `iex -S mix` against a scratch clone of Smelt: create a workspace, run `Smelt.Gate.run/2` and see it pass; then modify an existing test in the workspace and see `:protected_files` fail with `:checks` skipped; remove the workspace. This is not part of the automated suite
 - [ ] 6.3 Update the stage 2 status in `docs/roadmap.md`; verify `mix precommit` and `openspec validate add-deterministic-gate --strict` pass, and every scenario in the spec has a test with the same name
 
