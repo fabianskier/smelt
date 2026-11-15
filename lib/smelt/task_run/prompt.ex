@@ -24,6 +24,7 @@ defmodule Smelt.TaskRun.Prompt do
     Rules:
     - Implement only task #{id}. Do not start other tasks.
     - Do not modify or delete existing tests, and do not change anything under .smelt/.
+    - Put new tests in new test files. Adding to an existing test file counts as modifying it, and Smelt's gate rejects it.
     - When done, mark task #{id} as done in #{TaskList.path(change)}.
     - Run `sh .smelt/checks.sh` and fix every failure until it passes.
     - Commit your work with a Conventional Commit message.
