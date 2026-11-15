@@ -2,8 +2,8 @@
 
 ## 1. Task and prompt
 
-- [ ] 1.1 Implement `Smelt.TaskRun.TaskList.fetch(repo, base_sha, change, task_id)` (read `tasks.md` at the base commit, match `- [ ] <id> …` / `- [x] <id> …`, errors `:change_not_found`, `:task_not_found`, `:task_done`); verify with unit tests for an open task, a done task (`[x]` and `[ X ]`), a missing id, an id that is a prefix of another (`1.1` vs `1.10`) and a missing change
-- [ ] 1.2 Implement `Smelt.TaskRun.Prompt` (`task/2` and `retry/1` from a gate result); verify with tests that the task prompt contains the change, task id, description and `tasks.md` path, and that the retry prompt lists each failed rule's details and omits passed and skipped rules
+- [x] 1.1 Implement `Smelt.TaskRun.TaskList.fetch(repo, base_sha, change, task_id)` (read `tasks.md` at the base commit, match `- [ ] <id> …` / `- [x] <id> …`, errors `:change_not_found`, `:task_not_found`, `:task_done`); verify with unit tests for an open task, a done task (`[x]` and `[ X ]`), a missing id, an id that is a prefix of another (`1.1` vs `1.10`) and a missing change
+- [x] 1.2 Implement `Smelt.TaskRun.Prompt` (`task/2` and `retry/1` from a gate result); verify with tests that the task prompt contains the change, task id, description and `tasks.md` path, and that the retry prompt lists each failed rule's details and omits passed and skipped rules
 
 ## 2. Running a task
 
