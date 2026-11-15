@@ -2,8 +2,8 @@
 
 ## 1. Isolation
 
-- [ ] 1.1 Add `--setting-sources project,local` to every run in `Smelt.Runner.ClaudeCode`, before the caller's `args:`; verify with the test for "Only project settings are loaded" (fake agent argument log) in a new test file
-- [ ] 1.2 Implement `ClaudeCode.isolated_env/1` and pass its unset list to the port before the caller's `env:`; verify with unit tests over maps and with `async: false` tests for "Parent session variables are removed" and "Caller variables still apply"; document the isolation in the `Smelt.Runner` entry of `docs/architecture.md`
+- [x] 1.1 Add `--setting-sources project,local` to every run in `Smelt.Runner.ClaudeCode`, before the caller's `args:`; verify with the test for "Only project settings are loaded" (fake agent argument log) in a new test file
+- [x] 1.2 Implement `ClaudeCode.isolated_env/1` and pass its unset list to the port before the caller's `env:`; verify with unit tests over maps and with `async: false` tests for "Parent session variables are removed" and "Caller variables still apply"; document the isolation in the `Smelt.Runner` entry of `docs/architecture.md`
 
 ## 2. Integration
 

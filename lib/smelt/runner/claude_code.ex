@@ -10,9 +10,18 @@ defmodule Smelt.Runner.ClaudeCode do
 
   Each run is a `Smelt.Runner.ClaudeCode.Session` process; see `Smelt.Runner`
   for how to follow its events.
+
+  Every run is isolated from whoever launched Smelt: it loads only the
+  working directory's project and local settings (`--setting-sources
+  project,local`), and its environment has no variables from a parent
+  Claude Code session or terminal integration (see `isolated_env/1`).
   """
 
   @behaviour Smelt.Runner
+
+  # Load only the working directory's project and local settings, never the
+  # user's own (hooks, plugins, skills, MCP servers). Login is unaffected.
+  @isolation_args ["--setting-sources", "project,local"]
 
   alias Smelt.Runner
   alias Smelt.Runner.ClaudeCode.Session
@@ -49,9 +58,10 @@ defmodule Smelt.Runner.ClaudeCode do
             prompt,
             "--output-format",
             "stream-json",
-            "--verbose" | Keyword.get(opts, :args, [])
+            "--verbose" | @isolation_args ++ Keyword.get(opts, :args, [])
           ],
-          env: opts |> Keyword.get(:env, []) |> to_port_env()
+          # Unset first, so a variable the caller passes explicitly wins.
+          env: to_port_env(isolated_env(System.get_env()) ++ Keyword.get(opts, :env, []))
         ]
 
         case DynamicSupervisor.start_child(Smelt.Runner.Supervisor, {Session, session_opts}) do
@@ -80,7 +90,31 @@ defmodule Smelt.Runner.ClaudeCode do
     :smelt |> Application.fetch_env!(__MODULE__) |> Keyword.fetch!(:executable)
   end
 
+  @doc """
+  Returns the variables to remove from the agent's environment, as
+  `{name, false}`, given Smelt's own environment as a map.
+
+  They belong to a parent Claude Code session (`CLAUDECODE`, `CLAUDE_*`,
+  `AI_AGENT`) or to a terminal integration (`REX_*`): an agent that inherits
+  them may act on the session that launched Smelt instead of on its task.
+
+      iex> Smelt.Runner.ClaudeCode.isolated_env(%{"CLAUDECODE" => "1", "PATH" => "/bin"})
+      [{"CLAUDECODE", false}]
+  """
+  @spec isolated_env(%{String.t() => String.t()}) :: [{String.t(), false}]
+  def isolated_env(env) do
+    for {name, _value} <- env, inherited_from_session?(name), do: {name, false}
+  end
+
+  defp inherited_from_session?(name) do
+    name in ["CLAUDECODE", "AI_AGENT"] or String.starts_with?(name, ["CLAUDE_", "REX_"])
+  end
+
+  # `false` removes a variable from the inherited environment.
   defp to_port_env(env) do
-    Enum.map(env, fn {key, value} -> {to_charlist(key), to_charlist(value)} end)
+    Enum.map(env, fn
+      {key, false} -> {to_charlist(key), false}
+      {key, value} -> {to_charlist(key), to_charlist(value)}
+    end)
   end
 end
