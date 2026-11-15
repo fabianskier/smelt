@@ -7,8 +7,8 @@
 
 ## 2. Integration
 
-- [ ] 2.1 From this Claude Code session, run `Smelt.Runner.ClaudeCode.run/2` once with a short prompt that asks the agent to list its skills, and confirm `rex` and the synced plugin skills are not among them; record the result in `docs/roadmap.md` and remove the isolation item from "Next". Uses a little Claude Pro quota; not part of the automated suite
-- [ ] 2.2 Verify `mix precommit`, `openspec validate isolate-agent --strict`, and that every scenario in the delta spec has a test with the same name
+- [x] 2.1 From this Claude Code session, run `Smelt.Runner.ClaudeCode.run/2` once with a short prompt that asks the agent to list its skills, and confirm `rex` and the synced plugin skills are not among them; record the result in `docs/roadmap.md` and remove the isolation item from "Next". Uses a little Claude Pro quota; not part of the automated suite
+- [x] 2.2 Verify `mix precommit`, `openspec validate isolate-agent --strict`, and that every scenario in the delta spec has a test with the same name
 
 ## Workflow follow-up
 
