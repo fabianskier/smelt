@@ -16,7 +16,7 @@
 
 ## 4. Terminal
 
-- [ ] 4.1 Implement `mix smelt.task REPO CHANGE TASK_ID [--base B] [--discard]` (live agent and gate output, diff stat, `[y/N]` approval, exit status); verify with `CaptureIO` tests for "Approve from the terminal" and "Decline keeps the workspace", plus `--discard`; document the command in `README.md`
+- [x] 4.1 Implement `mix smelt.task REPO CHANGE TASK_ID [--base B] [--discard]` (live agent and gate output, diff stat, `[y/N]` approval, exit status); verify with `CaptureIO` tests for "Approve from the terminal" and "Decline keeps the workspace", plus `--discard`; document the command in `README.md`
 
 ## 5. Integration
 
