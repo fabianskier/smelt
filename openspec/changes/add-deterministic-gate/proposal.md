@@ -27,7 +27,7 @@ None.
 
 ## Impact
 
-- New modules: `Smelt.Gate`, `Smelt.Gate.Result`, `Smelt.Gate.Config`, `Smelt.Gate.Changes`, `Smelt.Gate.Command`.
+- New modules: `Smelt.Gate`, `Smelt.Gate.Result`, `Smelt.Gate.Config`, `Smelt.Gate.Changes`, `Smelt.Gate.Rules`, `Smelt.Gate.Command`.
 - `Smelt.Git.cmd/3` gains an `:env` option; existing calls are unchanged.
 - New files in each gated project: `.smelt/checks.sh` and, optionally, `.smelt/gate.json`. Added to Smelt itself.
 - Requires the OpenSpec CLI only for projects that have an `openspec/` directory. No new Hex dependencies.

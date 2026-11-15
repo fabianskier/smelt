@@ -35,7 +35,7 @@ Smelt.Gate.run(%Smelt.Workspace{} = ws, opts)  # {:ok, %Smelt.Gate.Result{}} | {
 `%Smelt.Gate.Result{status: :pass | :fail, rules: [rule], duration_ms}` where each rule is `%{name: name, status: :pass | :fail | :skipped, details: map}` and `name` is `:protected_files`, `:diff_size`, `:openspec` or `:checks`, always in that order.
 
 Rule details:
-- `:protected_files` - `%{violations: [%{path: path, change: :modified | :deleted}]}`
+- `:protected_files` - `%{violations: [%{path: path, change: :modified | :deleted | :added}]}` (`:added` only under `.smelt/`)
 - `:diff_size` - `%{changed_lines:, changed_files:, max_changed_lines:, max_changed_files:}`
 - `:openspec` - `%{output: text}`, or `%{reason: :no_openspec_dir | :openspec_not_found}`
 - `:checks` - `%{exit_status:, output:}`, or `%{reason: :missing_script | :timeout | :earlier_rule_failed, output: …}`

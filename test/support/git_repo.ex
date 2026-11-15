@@ -164,7 +164,9 @@ defmodule Smelt.GitRepo do
     String.trim(resolved)
   end
 
-  defp git!(repo, args) do
+  @doc "Runs any git command in `repo` and returns its output; raises on failure."
+  @spec git!(Path.t(), [String.t()]) :: String.t()
+  def git!(repo, args) do
     case System.cmd("git", ["-C", repo | args], stderr_to_stdout: true, env: @env) do
       {output, 0} -> output
       {output, status} -> raise "git #{Enum.join(args, " ")} exited with #{status}:\n#{output}"

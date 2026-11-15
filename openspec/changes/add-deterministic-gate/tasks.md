@@ -10,8 +10,8 @@
 
 ## 3. Changes and cheap rules
 
-- [ ] 3.1 Implement `Smelt.Gate.Changes.measure(ws)` with a temporary index (`read-tree HEAD`, `add --all`, `diff --cached --no-renames -z --name-status / --numstat <base_sha>`), returning each changed path with its change type and line counts; verify with tests for "Uncommitted and untracked work is measured", "Ignored files are not measured" and "The workspace is left as it was" (branch, HEAD and `git status --porcelain` unchanged, temporary index deleted)
-- [ ] 3.2 Implement the `:protected_files` and `:diff_size` rules as pure functions over the measured changes and the config; verify with tests for "An existing test is modified", "An existing test is deleted", "A new test is added", "Gate configuration is changed", "Too many changed lines", "Too many changed files", plus a rename of an existing test counting as a deletion
+- [x] 3.1 Implement `Smelt.Gate.Changes.measure(ws)` with a temporary index (`read-tree HEAD`, `add --all`, `diff --cached --no-renames -z --name-status / --numstat <base_sha>`), returning each changed path with its change type and line counts; verify with tests for "Uncommitted and untracked work is measured", "Ignored files are not measured" and "The workspace is left as it was" (branch, HEAD and `git status --porcelain` unchanged, temporary index deleted)
+- [x] 3.2 Implement the `:protected_files` and `:diff_size` rules as pure functions over the measured changes and the config; verify with tests for "An existing test is modified", "An existing test is deleted", "A new test is added", "Gate configuration is changed", "Too many changed lines", "Too many changed files", plus a rename of an existing test counting as a deletion
 
 ## 4. Running commands
 
