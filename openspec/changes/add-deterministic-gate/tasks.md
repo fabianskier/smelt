@@ -15,7 +15,7 @@
 
 ## 4. Running commands
 
-- [ ] 4.1 Implement `Smelt.Gate.Command.run(executable, args, cd:, env:, timeout:)`: a dedicated process owns the port (stdin closed, stderr merged), keeps the last 64 KiB of output, monitors the caller, and on timeout or caller exit kills the whole process tree (SIGTERM, 2 s grace, SIGKILL); returns `{:ok, %{exit_status:, output:}}` or `{:error, {:timeout, output}}`; verify with tests for exit status and output, output truncation, a timeout that kills the script and its child process, and a caller that exits mid-run leaving no process behind
+- [x] 4.1 Implement `Smelt.Gate.Command.run(executable, args, cd:, env:, timeout:)`: a dedicated process owns the port (stdin closed, stderr merged), keeps the last 64 KiB of output, monitors the caller, and on timeout or caller exit kills the whole process tree (SIGTERM, 2 s grace, SIGKILL); returns `{:ok, %{exit_status:, output:}}` or `{:error, {:timeout, output}}`; verify with tests for exit status and output, output truncation, a timeout that kills the script and its child process, and a caller that exits mid-run leaving no process behind
 
 ## 5. Gate
 
