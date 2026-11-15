@@ -42,6 +42,36 @@ defmodule Smelt.GitRepo do
   end
 
   @doc """
+  Creates a repository in `dir` set up for the gate: an initial commit with
+  `README.md`, a test file `test/app_test.exs`, a `.gitignore` for `_build/`,
+  and `.smelt/checks.sh` with `checks` as its body.
+
+  Options:
+
+    * `:checks` - the checks script, default `"exit 0\\n"`; `nil` for none
+    * `:gate` - a map written as `.smelt/gate.json`, default none
+    * `:files` - extra files for the initial commit
+
+  Returns the repository's real path.
+  """
+  @spec gate_project!(Path.t(), keyword()) :: Path.t()
+  def gate_project!(dir, opts \\ []) do
+    repo = init!(dir)
+
+    files =
+      %{"test/app_test.exs" => "test 1\n", ".gitignore" => "_build/\n"}
+      |> put_unless_nil(".smelt/checks.sh", Keyword.get(opts, :checks, "exit 0\n"))
+      |> put_unless_nil(".smelt/gate.json", opts[:gate] && JSON.encode!(opts[:gate]))
+      |> Map.merge(Keyword.get(opts, :files, %{}))
+
+    commit!(repo, "gate setup", files)
+    repo
+  end
+
+  defp put_unless_nil(map, _key, nil), do: map
+  defp put_unless_nil(map, key, value), do: Map.put(map, key, value)
+
+  @doc """
   Writes `files` (a map of relative path to content), stages everything and
   commits it with `message`. With no files, it makes an empty commit.
 

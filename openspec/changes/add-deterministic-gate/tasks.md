@@ -6,7 +6,7 @@
 
 ## 2. Configuration
 
-- [ ] 2.1 Implement `Smelt.Gate.Config.load(repo, base_sha)` (read `.smelt/gate.json` at the base commit with `git cat-file -e` / `git show`, apply defaults, strict validation of keys, types and positive numbers, `{:error, {:invalid_config, message}}`), and add a `Smelt.GitRepo` helper to write `.smelt/` files; verify with tests for "Defaults without a configuration file", "Settings from the base commit" (unit level) and "Invalid configuration" (bad JSON, wrong type, unknown key, non-positive number); document `.smelt/gate.json` in a new `Smelt.Gate` entry in `docs/architecture.md`
+- [x] 2.1 Implement `Smelt.Gate.Config.load(repo, base_sha)` (read `.smelt/gate.json` at the base commit with `git cat-file -e` / `git show`, apply defaults, strict validation of keys, types and positive numbers, `{:error, {:invalid_config, message}}`), and add a `Smelt.GitRepo` helper to write `.smelt/` files; verify with tests for "Defaults without a configuration file", "Settings from the base commit" (unit level) and "Invalid configuration" (bad JSON, wrong type, unknown key, non-positive number); document `.smelt/gate.json` in a new `Smelt.Gate` entry in `docs/architecture.md`
 
 ## 3. Changes and cheap rules
 
