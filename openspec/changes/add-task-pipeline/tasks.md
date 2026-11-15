@@ -7,8 +7,8 @@
 
 ## 2. Running a task
 
-- [ ] 2.1 Add `test/support/fake_agent`, and `GIT_AUTHOR_*`/`GIT_COMMITTER_*` for `Smelt.Git` in `config/test.exs`; implement `Smelt.TaskRun` with its struct, `new_id/0`, `subscribe/1`, `agent_run_id/2` and `run/4` (workspace, task, agent with the permission args, gate, one resumed retry, events); verify with tests named after the spec for "Task passes the gate", "Unknown task", "Task already done", "Prompt describes the task", "Agent permissions", "Fixed on retry", "Fails twice", "Agent fails" and "Progress events in order"
-- [ ] 2.2 Document `Smelt.TaskRun.run/4`, its outcome and events in a new `Smelt.TaskRun` entry in `docs/architecture.md`
+- [x] 2.1 Add `test/support/fake_agent`, and `GIT_AUTHOR_*`/`GIT_COMMITTER_*` for `Smelt.Git` in `config/test.exs`; implement `Smelt.TaskRun` with its struct, `new_id/0`, `subscribe/1`, `agent_run_id/2` and `run/4` (workspace, task, agent with the permission args, gate, one resumed retry, events); verify with tests named after the spec for "Task passes the gate", "Unknown task", "Task already done", "Prompt describes the task", "Agent permissions", "Fixed on retry", "Fails twice", "Agent fails" and "Progress events in order"
+- [x] 2.2 Document `Smelt.TaskRun.run/4`, its outcome and events in a new `Smelt.TaskRun` entry in `docs/architecture.md`
 
 ## 3. Merging and discarding
 

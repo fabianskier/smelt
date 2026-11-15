@@ -1,0 +1,38 @@
+#!/bin/sh
+# Fake coding agent for Smelt.TaskRun tests. Speaks enough Claude Code
+# stream-json for Smelt.Runner.ClaudeCode and does scripted work in its
+# working directory (the task's workspace). Behavior comes from:
+#
+#   FAKE_AGENT_LOG_DIR=dir      write this call's arguments, NUL-separated, to dir/call-<n>
+#   FAKE_AGENT_FIRST=snippet    shell snippet to run on a first attempt
+#   FAKE_AGENT_RESUMED=snippet  shell snippet to run when called with --resume
+#   FAKE_AGENT_EXIT=n           exit with status n (default 0)
+#
+# Snippets run with a fixed git identity and without the global git config.
+
+resumed=""
+for arg in "$@"; do
+  if [ "$arg" = "--resume" ]; then resumed=1; fi
+done
+
+if [ -n "$FAKE_AGENT_LOG_DIR" ]; then
+  n=$(ls "$FAKE_AGENT_LOG_DIR" | wc -l | tr -d ' ')
+  printf '%s\0' "$@" > "$FAKE_AGENT_LOG_DIR/call-$((n + 1))"
+fi
+
+printf '{"type":"system","subtype":"init","session_id":"fake-session","model":"fake","cwd":"%s"}\n' "$(pwd -P)"
+
+if [ -n "$resumed" ]; then action="$FAKE_AGENT_RESUMED"; else action="$FAKE_AGENT_FIRST"; fi
+
+if [ -n "$action" ]; then
+  GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+  GIT_AUTHOR_NAME="Fake Agent" GIT_AUTHOR_EMAIL=agent@smelt.invalid \
+  GIT_COMMITTER_NAME="Fake Agent" GIT_COMMITTER_EMAIL=agent@smelt.invalid \
+    sh -c "$action" >&2
+fi
+
+printf '{"type":"assistant","message":{"content":[{"type":"text","text":"working on it"}]}}\n'
+
+if [ "${FAKE_AGENT_EXIT:-0}" != "0" ]; then exit "$FAKE_AGENT_EXIT"; fi
+
+printf '{"type":"result","subtype":"success","is_error":false,"result":"done","session_id":"fake-session","total_cost_usd":0.25,"num_turns":3,"duration_ms":10}\n'

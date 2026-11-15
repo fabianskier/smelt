@@ -8,7 +8,16 @@ config :smelt, Smelt.Runner.ClaudeCode,
   executable: Path.expand("../test/support/fake_claude", __DIR__)
 
 # Ignore the developer's global and system git config in tests.
-config :smelt, Smelt.Git, env: [{"GIT_CONFIG_GLOBAL", "/dev/null"}, {"GIT_CONFIG_NOSYSTEM", "1"}]
+config :smelt, Smelt.Git,
+  env: [
+    {"GIT_CONFIG_GLOBAL", "/dev/null"},
+    {"GIT_CONFIG_NOSYSTEM", "1"},
+    # Smelt commits (leftovers, rebases) need an identity without the global config.
+    {"GIT_AUTHOR_NAME", "Smelt Test"},
+    {"GIT_AUTHOR_EMAIL", "smelt@smelt.invalid"},
+    {"GIT_COMMITTER_NAME", "Smelt Test"},
+    {"GIT_COMMITTER_EMAIL", "smelt@smelt.invalid"}
+  ]
 
 # Configure your database
 #
