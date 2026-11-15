@@ -81,6 +81,9 @@ defmodule Smelt.TaskRunTest do
                "Glob",
                "Grep",
                "Bash(mix:*)",
+               "Bash(MIX_ENV=test mix:*)",
+               "Bash(elixir:*)",
+               "Bash(erl:*)",
                "Bash(git:*)",
                "Bash(sh .smelt/checks.sh)"
              ]

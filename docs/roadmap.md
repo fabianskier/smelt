@@ -22,6 +22,7 @@ Stage 1 (skeleton) complete for CLI use. Stage 2 complete for CLI use: one task 
 - 1.6: `DATABASE_URL` set in `mise.toml` `[env]` and read in `config/runtime.exs` (dev only; tests keep `smelt_test` from `config/test.exs`).
 - 1.7: Oban 2.24 (Postgres, Basic engine, migration v14) with queues `claude: 1`, `local: 1`, plus Pruner (7 days) and Lifeline plugins. Tests use `testing: :manual`.
 - 1.8a: OpenSpec change `add-agent-runner` (archived 2026-11-13): `Smelt.Runner` behaviour, Claude Code implementation via a supervised `Port` session, events over PubSub, cleanup of the agent process. Spec: `openspec/specs/agent-runner/spec.md`.
+- OpenSpec change `widen-agent-permissions`: task agents may also run `elixir`, `erl` and `MIX_ENV=test mix`, which `viborita`'s agents needed (probe: `Bash(mix:*)` doesn't cover a `MIX_ENV=test` prefix). Shell loops stay blocked. Spec: `openspec/specs/task-pipeline/spec.md`.
 - 2.1: OpenSpec change `add-task-workspace` (archived 2026-11-13): `Smelt.Git` wrapper and `Smelt.Workspace` (`create`, `fetch`, `list`, `remove`), one git worktree per task outside the project, with base commit metadata and a per-repo lock. Checked end to end against a scratch clone with a real Claude Code run. Spec: `openspec/specs/task-workspace/spec.md`.
 - 2.2: OpenSpec change `add-deterministic-gate` (archived 2026-11-15): `Smelt.Gate.run/2` checks a task workspace without AI (protected tests and `.smelt/`, diff size, `openspec validate --strict`, the project's `.smelt/checks.sh` with a timeout that kills the whole process tree), with configuration read from the task's base commit. Smelt has its own `.smelt/checks.sh`. Checked end to end on a scratch clone of Smelt (pass in 44 s from a fresh worktree; a modified test fails at once). Spec: `openspec/specs/task-gate/spec.md`.
 - 2.3: OpenSpec change `add-task-pipeline` (archived 2026-11-15): `Smelt.TaskRun` (workspace → Claude Code with limited permissions → gate → one resumed retry → merge or discard, with progress over PubSub) and `mix smelt.task REPO CHANGE TASK_ID [--merge | --discard]`. First real run (2026-11-15): task 1.1 of `add-game-logic` in `~/code/viborita` passed the gate on the first attempt (11 turns, $0.40 equivalent, 271 lines in 4 files); declined at the prompt to leave the approval to a human. Spec: `openspec/specs/task-pipeline/spec.md`.
@@ -29,7 +30,6 @@ Stage 1 (skeleton) complete for CLI use. Stage 2 complete for CLI use: one task 
 
 **Next:**
 1. **Stage 2, CLI first:** one task end to end (worktree → build → gate → approval → merge), driven and approved from the terminal (`mix` tasks / `iex`), with no new web UI.
-   - Widen the agent's permissions for harmless commands it needed in `viborita` (`MIX_ENV=test mix …`, `elixir --version`, shell loops to rerun a test).
    - Decide whether the protected-files rule should allow *adding* tests to an existing test file (today any change to it fails the gate).
 2. **Stage 3**: persistence and resuming, or dogfooding Smelt's own changes with `mix smelt.task`.
 
