@@ -20,10 +20,17 @@ defmodule Smelt.Git do
 
   Returns `{:ok, output}` when git exits with status 0, or
   `{:error, {:git, args, exit_status, output}}` otherwise.
+
+  Options:
+
+    * `:env` - extra environment variables for this call only, as
+      `[{"NAME", "value"}]`, added after the base and configured ones
   """
-  @spec cmd(Path.t(), [String.t()]) :: {:ok, String.t()} | {:error, error()}
-  def cmd(repo, args) when is_binary(repo) and is_list(args) do
-    case System.cmd("git", ["-C", repo | args], stderr_to_stdout: true, env: env()) do
+  @spec cmd(Path.t(), [String.t()], keyword()) :: {:ok, String.t()} | {:error, error()}
+  def cmd(repo, args, opts \\ []) when is_binary(repo) and is_list(args) do
+    env = env() ++ Keyword.get(opts, :env, [])
+
+    case System.cmd("git", ["-C", repo | args], stderr_to_stdout: true, env: env) do
       {output, 0} -> {:ok, output}
       {output, status} -> {:error, {:git, args, status, output}}
     end

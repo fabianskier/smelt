@@ -35,6 +35,14 @@ defmodule Smelt.GitTest do
       assert Git.cmd(repo, ["rev-parse", "feature"]) == {:ok, sha <> "\n"}
     end
 
+    test "passes per-call environment variables to git", %{repo: repo, tmp_dir: tmp_dir} do
+      assert {:ok, "README.md\n"} = Git.cmd(repo, ["ls-files"])
+
+      # An index file that doesn't exist is an empty index.
+      empty_index = [{"GIT_INDEX_FILE", Path.join(tmp_dir, "no-such-index")}]
+      assert Git.cmd(repo, ["ls-files"], env: empty_index) == {:ok, ""}
+    end
+
     test "ignores the user's global git config", %{repo: repo} do
       assert {:error, {:git, _, 1, ""}} =
                Git.cmd(repo, ["config", "--global", "--get", "user.name"])

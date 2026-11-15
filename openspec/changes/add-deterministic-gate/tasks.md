@@ -2,7 +2,7 @@
 
 ## 1. Git environment per call
 
-- [ ] 1.1 Add `Smelt.Git.cmd/3` with an `:env` option (variables added on top of the base and configured environment; `cmd/2` unchanged); verify with a test that a per-call variable reaches git (for example `GIT_INDEX_FILE` pointing at a missing file makes `git ls-files` list nothing) and that the existing `Smelt.Git` tests pass unchanged
+- [x] 1.1 Add `Smelt.Git.cmd/3` with an `:env` option (variables added on top of the base and configured environment; `cmd/2` unchanged); verify with a test that a per-call variable reaches git (for example `GIT_INDEX_FILE` pointing at a missing file makes `git ls-files` list nothing) and that the existing `Smelt.Git` tests pass unchanged
 
 ## 2. Configuration
 
