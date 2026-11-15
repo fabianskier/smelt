@@ -72,7 +72,7 @@ The system SHALL merge an approved task by committing any uncommitted changes in
 - **THEN** those changes are part of the merged work
 
 ### Requirement: Rebase and gate again when the base moved
-The system SHALL, when the base branch has new commits since the workspace was created, rebase the task's branch onto it and run the gate again against the new base before merging. A rebase conflict or a failing gate MUST stop the merge, leaving the base branch and the workspace as they were before the merge.
+The system SHALL, when the base branch has new commits since the workspace was created, rebase the task's branch onto it and run the gate again against the new base before merging. A rebase conflict or a failing gate MUST stop the merge, leaving the base branch unchanged and keeping the workspace.
 
 #### Scenario: Base moved without conflicts
 - **WHEN** a passed task is approved after the base branch got an unrelated commit

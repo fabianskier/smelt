@@ -21,6 +21,7 @@ defmodule Smelt.TaskRun do
   """
 
   alias Smelt.Gate
+  alias Smelt.Git
   alias Smelt.Runner.ClaudeCode
   alias Smelt.TaskRun.Prompt
   alias Smelt.TaskRun.TaskList
@@ -180,6 +181,121 @@ defmodule Smelt.TaskRun do
             {:ok, %{run | status: :gate_failed}}
         end
     end
+  end
+
+  @doc """
+  Merges an approved task into its base branch, then removes its workspace.
+
+    1. Refuses (`{:dirty_checkout, path}`) when the base branch is checked
+       out in a worktree with uncommitted changes to tracked files.
+    2. Commits anything left uncommitted in the workspace.
+    3. If the base branch moved since the workspace was created, rebases the
+       task's branch onto it (`:rebase_conflict` on a conflict, after
+       aborting) and runs the gate again against the new base
+       (`{:gate_failed, %Smelt.Gate.Result{}}`).
+    4. Fast-forwards the base branch: with `git merge --ff-only` in the
+       worktree that has it checked out, so its files are updated, or with
+       `git update-ref` when no worktree has it.
+    5. Removes the workspace and its (now merged) branch.
+
+  On any error the base branch is unchanged and the workspace is kept.
+  Returns `{:ok, %{base: base, sha: sha}}` with the base branch's new commit.
+
+  Options: `:root` (for the workspace) and `:gate` (for `Smelt.Gate.run/2`).
+  """
+  @spec merge(Workspace.t(), keyword()) ::
+          {:ok, %{base: String.t(), sha: String.t()}} | {:error, term()}
+  def merge(%Workspace{} = ws, opts \\ []) do
+    with :ok <- ensure_branch(ws),
+         {:ok, checkout} <- base_checkout(ws),
+         :ok <- ensure_clean(checkout),
+         :ok <- commit_leftovers(ws),
+         {:ok, base_tip} <- rev_parse(ws.repo, "refs/heads/" <> ws.base),
+         :ok <- rebase_if_moved(ws, base_tip, opts),
+         {:ok, sha} <- rev_parse(ws.path, "HEAD"),
+         :ok <- fast_forward(ws, checkout, sha, base_tip),
+         {:ok, _} <- Workspace.remove(ws.repo, ws.change, ws.task_id, Keyword.take(opts, [:root])) do
+      {:ok, %{base: ws.base, sha: sha}}
+    end
+  end
+
+  @doc """
+  Discards a task: removes its workspace and its branch, merged or not.
+  Returns what `Smelt.Workspace.remove/4` returns.
+  """
+  @spec discard(Path.t(), String.t(), String.t(), keyword()) ::
+          {:ok, :removed | :absent} | {:error, term()}
+  def discard(repo, change, task_id, opts \\ []) do
+    Workspace.remove(repo, change, task_id, [force: true] ++ Keyword.take(opts, [:root]))
+  end
+
+  defp ensure_branch(ws) do
+    case Git.cmd(ws.repo, ["show-ref", "--verify", "--quiet", "refs/heads/" <> ws.base]) do
+      {:ok, _} -> :ok
+      {:error, _} -> {:error, {:base_not_a_branch, ws.base}}
+    end
+  end
+
+  # The worktree that has the base branch checked out, or nil.
+  defp base_checkout(ws) do
+    with {:ok, worktrees} <- Git.worktrees(ws.repo), do: {:ok, Map.get(worktrees, ws.base)}
+  end
+
+  # Untracked files don't matter: `merge --ff-only` refuses on its own when
+  # it would overwrite one.
+  defp ensure_clean(nil), do: :ok
+
+  defp ensure_clean(checkout) do
+    case Git.cmd(checkout, ["status", "--porcelain", "--untracked-files=no"]) do
+      {:ok, ""} -> :ok
+      {:ok, _} -> {:error, {:dirty_checkout, checkout}}
+      error -> error
+    end
+  end
+
+  defp commit_leftovers(ws) do
+    with {:ok, status} <- Git.cmd(ws.path, ["status", "--porcelain"]) do
+      if status == "" do
+        :ok
+      else
+        message = "chore(smelt): commit remaining work of task #{ws.task_id}"
+
+        with {:ok, _} <- Git.cmd(ws.path, ["add", "--all"]),
+             {:ok, _} <- Git.cmd(ws.path, ["commit", "--quiet", "-m", message]),
+             do: :ok
+      end
+    end
+  end
+
+  defp rebase_if_moved(%Workspace{base_sha: base_tip}, base_tip, _opts), do: :ok
+
+  defp rebase_if_moved(ws, base_tip, opts) do
+    case Git.cmd(ws.path, ["rebase", "--quiet", base_tip]) do
+      {:ok, _} ->
+        case Gate.run(%{ws | base_sha: base_tip}, Keyword.get(opts, :gate, [])) do
+          {:ok, %{status: :pass}} -> :ok
+          {:ok, gate} -> {:error, {:gate_failed, gate}}
+          {:error, reason} -> {:error, {:gate_error, reason}}
+        end
+
+      {:error, _} ->
+        _ = Git.cmd(ws.path, ["rebase", "--abort"])
+        {:error, :rebase_conflict}
+    end
+  end
+
+  defp fast_forward(_ws, checkout, sha, _base_tip) when is_binary(checkout) do
+    with {:ok, _} <- Git.cmd(checkout, ["merge", "--ff-only", "--quiet", sha]), do: :ok
+  end
+
+  # `update-ref` with the old value fails if the base moved meanwhile.
+  defp fast_forward(ws, nil, sha, base_tip) do
+    with {:ok, _} <- Git.cmd(ws.repo, ["update-ref", "refs/heads/" <> ws.base, sha, base_tip]),
+         do: :ok
+  end
+
+  defp rev_parse(dir, rev) do
+    with {:ok, sha} <- Git.cmd(dir, ["rev-parse", "--verify", rev]), do: {:ok, String.trim(sha)}
   end
 
   # Without a session to resume, the agent needs the task again.

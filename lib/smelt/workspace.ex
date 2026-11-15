@@ -132,7 +132,7 @@ defmodule Smelt.Workspace do
          {:ok, repo} <- main_checkout(repo) do
       branch = branch_name(change, task_id)
 
-      with {:ok, worktrees} <- worktrees(repo),
+      with {:ok, worktrees} <- Git.worktrees(repo),
            true <- Map.has_key?(worktrees, branch),
            {:ok, ws} <- load(root, repo, change, task_id) do
         {:ok, ws}
@@ -155,7 +155,7 @@ defmodule Smelt.Workspace do
     root = root(opts)
 
     with {:ok, repo} <- main_checkout(repo),
-         {:ok, worktrees} <- worktrees(repo) do
+         {:ok, worktrees} <- Git.worktrees(repo) do
       workspaces =
         for branch <- Map.keys(worktrees),
             {change, task_id} <- parse_branch(branch),
@@ -199,7 +199,7 @@ defmodule Smelt.Workspace do
   end
 
   defp do_remove(repo, change, task_id, root, force?) do
-    with {:ok, worktrees} <- worktrees(repo) do
+    with {:ok, worktrees} <- Git.worktrees(repo) do
       path = workspace_path(root, repo, change, task_id)
       meta_path = metadata_path(root, repo, change, task_id)
       branch = branch_name(change, task_id)
@@ -375,30 +375,6 @@ defmodule Smelt.Workspace do
     _ = Git.cmd(ws.repo, ["branch", "-D", ws.branch])
     _ = File.rm(metadata_path(root, ws.repo, ws.change, ws.task_id))
     error
-  end
-
-  # Returns the repository's worktrees that are on a branch, as a map of
-  # branch name to worktree path. Git allows a branch in only one worktree.
-  #
-  # `git worktree list --porcelain` prints one block per worktree, separated
-  # by blank lines:
-  #
-  #     worktree /path/to/worktree
-  #     HEAD <sha>
-  #     branch refs/heads/<branch>
-  defp worktrees(repo) do
-    with {:ok, output} <- Git.cmd(repo, ["worktree", "list", "--porcelain"]) do
-      worktrees =
-        for block <- String.split(output, "\n\n", trim: true),
-            lines = String.split(block, "\n", trim: true),
-            "worktree " <> path <- Enum.take(lines, 1),
-            "branch refs/heads/" <> branch <- lines,
-            into: %{} do
-          {branch, path}
-        end
-
-      {:ok, worktrees}
-    end
   end
 
   @change_format ~r/\A[a-z0-9]+(-[a-z0-9]+)*\z/

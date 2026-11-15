@@ -36,6 +36,33 @@ defmodule Smelt.Git do
     end
   end
 
+  @doc """
+  Returns the worktrees of `repo` that have a branch checked out, as a map of
+  branch name to worktree path. The main checkout is included. Git allows a
+  branch to be checked out in only one worktree.
+  """
+  @spec worktrees(Path.t()) :: {:ok, %{String.t() => Path.t()}} | {:error, error()}
+  def worktrees(repo) do
+    # `git worktree list --porcelain` prints one block per worktree, separated
+    # by blank lines:
+    #
+    #     worktree /path/to/worktree
+    #     HEAD <sha>
+    #     branch refs/heads/<branch>
+    with {:ok, output} <- cmd(repo, ["worktree", "list", "--porcelain"]) do
+      worktrees =
+        for block <- String.split(output, "\n\n", trim: true),
+            lines = String.split(block, "\n", trim: true),
+            "worktree " <> path <- Enum.take(lines, 1),
+            "branch refs/heads/" <> branch <- lines,
+            into: %{} do
+          {branch, path}
+        end
+
+      {:ok, worktrees}
+    end
+  end
+
   defp env do
     extra = :smelt |> Application.get_env(__MODULE__, []) |> Keyword.get(:env, [])
     @base_env ++ extra

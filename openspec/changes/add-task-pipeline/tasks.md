@@ -12,7 +12,7 @@
 
 ## 3. Merging and discarding
 
-- [ ] 3.1 Implement `merge/2` (commit leftovers, rebase and gate again if the base moved, fast-forward in the checkout that has the base or with `update-ref`, refuse a dirty checkout, remove the workspace) and `discard/4`; verify with tests for "Approved task is merged", "Base branch not checked out", "Uncommitted work is committed on merge", "Base moved without conflicts", "Rebase conflict", "Checkout with uncommitted changes" and "Task discarded"; document `merge/2` and `discard/4` in the `Smelt.TaskRun` entry of `docs/architecture.md`
+- [x] 3.1 Implement `merge/2` (commit leftovers, rebase and gate again if the base moved, fast-forward in the checkout that has the base or with `update-ref`, refuse a dirty checkout, remove the workspace) and `discard/4`; verify with tests for "Approved task is merged", "Base branch not checked out", "Uncommitted work is committed on merge", "Base moved without conflicts", "Rebase conflict", "Checkout with uncommitted changes" and "Task discarded"; document `merge/2` and `discard/4` in the `Smelt.TaskRun` entry of `docs/architecture.md`
 
 ## 4. Terminal
 
