@@ -20,8 +20,8 @@
 
 ## 5. Integration
 
-- [ ] 5.1 Run task 1.1 of `add-game-logic` in `~/code/viborita` for real with `mix smelt.task`, review the diff, and approve or decline; record what happened (outcome, attempts, cost, any problem) in the roadmap. This uses Claude Pro quota and is not part of the automated suite
-- [ ] 5.2 Update the stage 2 status in `docs/roadmap.md`; verify `mix precommit`, `openspec validate add-task-pipeline --strict`, and that every scenario in the spec has a test with the same name
+- [x] 5.1 Run task 1.1 of `add-game-logic` in `~/code/viborita` for real with `mix smelt.task`, review the diff, and approve or decline; record what happened (outcome, attempts, cost, any problem) in the roadmap. This uses Claude Pro quota and is not part of the automated suite
+- [x] 5.2 Update the stage 2 status in `docs/roadmap.md`; verify `mix precommit`, `openspec validate add-task-pipeline --strict`, and that every scenario in the spec has a test with the same name
 
 ## Workflow follow-up
 

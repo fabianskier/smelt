@@ -13,7 +13,7 @@
 
 ## Current status
 
-Stage 1 (skeleton) complete for CLI use. Stage 2 in progress: workspaces and gate done; driving one task from the CLI next.
+Stage 1 (skeleton) complete for CLI use. Stage 2 complete for CLI use: one task end to end with `mix smelt.task`.
 
 **Done:**
 - Environment (mise with Erlang 29.1.2, Elixir 1.20.5, Node, OpenSpec 2.0.0) and the Phoenix 1.8 project, generated with `mix phx.new . --app smelt --no-mailer --no-gettext`. The `smelt_dev` and `smelt_test` databases exist.
@@ -24,10 +24,13 @@ Stage 1 (skeleton) complete for CLI use. Stage 2 in progress: workspaces and gat
 - 1.8a: OpenSpec change `add-agent-runner` (archived 2026-11-13): `Smelt.Runner` behaviour, Claude Code implementation via a supervised `Port` session, events over PubSub, cleanup of the agent process. Spec: `openspec/specs/agent-runner/spec.md`.
 - 2.1: OpenSpec change `add-task-workspace` (archived 2026-11-13): `Smelt.Git` wrapper and `Smelt.Workspace` (`create`, `fetch`, `list`, `remove`), one git worktree per task outside the project, with base commit metadata and a per-repo lock. Checked end to end against a scratch clone with a real Claude Code run. Spec: `openspec/specs/task-workspace/spec.md`.
 - 2.2: OpenSpec change `add-deterministic-gate` (archived 2026-11-15): `Smelt.Gate.run/2` checks a task workspace without AI (protected tests and `.smelt/`, diff size, `openspec validate --strict`, the project's `.smelt/checks.sh` with a timeout that kills the whole process tree), with configuration read from the task's base commit. Smelt has its own `.smelt/checks.sh`. Checked end to end on a scratch clone of Smelt (pass in 44 s from a fresh worktree; a modified test fails at once). Spec: `openspec/specs/task-gate/spec.md`.
+- 2.3: OpenSpec change `add-task-pipeline`: `Smelt.TaskRun` (workspace → Claude Code with limited permissions → gate → one resumed retry → merge or discard, with progress over PubSub) and `mix smelt.task REPO CHANGE TASK_ID [--merge | --discard]`. First real run (2026-11-15): task 1.1 of `add-game-logic` in `~/code/viborita` passed the gate on the first attempt (11 turns, $0.40 equivalent, 271 lines in 4 files); declined at the prompt to leave the approval to a human. Spec: `openspec/changes/add-task-pipeline/specs/task-pipeline/spec.md`.
 
 **Next:**
 1. **Stage 2, CLI first:** one task end to end (worktree → build → gate → approval → merge), driven and approved from the terminal (`mix` tasks / `iex`), with no new web UI.
-   - 2.3: OpenSpec change to drive one task from the CLI: run the agent in a workspace, gate it, ask for approval, merge.
+   - Isolate the agent from the user's own Claude Code setup: in the first real run it inherited global hooks/instructions and `REX_*` variables and tried `rex session rename` three times (denied by its permissions, but it cost turns). Candidates: `--setting-sources project` and a clean environment for the agent.
+   - Decide whether agent commits in target projects may carry Claude Code's `Co-Authored-By` trailer (they do by default), and say so in each project's `CLAUDE.md`.
+2. **Stage 3**: persistence and resuming, or dogfooding Smelt's own changes with `mix smelt.task`.
 
 **Notes:**
 - 1.8b (`/runs` web dashboard) is parked: complete (15/15 tasks, tests passing) on the unmerged branch `add-run-stream-view`, kept for later. Decision (2026-11-13): use Smelt from the CLI for now.
