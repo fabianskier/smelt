@@ -19,7 +19,7 @@
 
 ## 5. Gate
 
-- [ ] 5.1 Implement the `:openspec` and `:checks` rules (OpenSpec through `Smelt.Gate.Command` with `OPENSPEC_TELEMETRY=0`, skipped without `openspec/`, `:openspec_not_found` when the CLI is missing; checks script extracted from `base_sha` to a temporary file and run with `/bin/sh`) and `Smelt.Gate.run/2` with `Smelt.Gate.Result`, rule order and skipping; verify with tests named after the spec for "Every rule passes", "One rule fails", "Invalid OpenSpec artifacts", "Project without OpenSpec", "Checks pass", "Checks fail", "The workspace's copy of the script is ignored", "No checks script", "Checks exceed the timeout", "Protected test modified" (script not run), "Settings from the base commit" (end to end) and `:workspace_missing`; document `run/2`, the rules and the result in the `Smelt.Gate` entry of `docs/architecture.md`
+- [x] 5.1 Implement the `:openspec` and `:checks` rules (OpenSpec through `Smelt.Gate.Command` with `OPENSPEC_TELEMETRY=0`, skipped without `openspec/`, `:openspec_not_found` when the CLI is missing; checks script extracted from `base_sha` to a temporary file and run with `/bin/sh`) and `Smelt.Gate.run/2` with `Smelt.Gate.Result`, rule order and skipping; verify with tests named after the spec for "Every rule passes", "One rule fails", "Invalid OpenSpec artifacts", "Project without OpenSpec", "Checks pass", "Checks fail", "The workspace's copy of the script is ignored", "No checks script", "Checks exceed the timeout", "Protected test modified" (script not run), "Settings from the base commit" (end to end) and `:workspace_missing`; document `run/2`, the rules and the result in the `Smelt.Gate` entry of `docs/architecture.md`
 
 ## 6. Smelt's own gate and integration
 

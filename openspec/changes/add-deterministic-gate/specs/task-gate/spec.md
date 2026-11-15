@@ -86,7 +86,8 @@ The system SHALL run the project's `.smelt/checks.sh`, as it was at the base com
 
 #### Scenario: The workspace's copy of the script is ignored
 - **WHEN** a workspace replaces a failing checks script with one that always succeeds
-- **THEN** the gate runs the base commit's script and the checks rule fails
+- **THEN** the overall result is fail
+- **AND** when the checks run for that workspace, they run the base commit's failing script
 
 #### Scenario: No checks script
 - **WHEN** the base commit has no `.smelt/checks.sh`

@@ -55,6 +55,11 @@ defmodule Smelt.Gate.CommandTest do
     assert output == "#{tmp_dir}\nhi\n"
   end
 
+  test "an environment variable set to false is removed", %{tmp_dir: tmp_dir} do
+    assert {:ok, %{output: "unset\n"}} =
+             sh(~s(echo "${HOME-unset}"), tmp_dir, env: [{"HOME", false}])
+  end
+
   test "stdin is closed", %{tmp_dir: tmp_dir} do
     assert sh("cat; echo done", tmp_dir, timeout: 2_000) ==
              {:ok, %{exit_status: 0, output: "done\n"}}

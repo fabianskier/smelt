@@ -31,7 +31,8 @@ defmodule Smelt.Gate.Command do
 
     * `:cd` - working directory (required)
     * `:timeout` - milliseconds before the command is killed (required)
-    * `:env` - extra environment variables, as `[{"NAME", "value"}]`
+    * `:env` - extra environment variables, as `[{"NAME", "value"}]`; a
+      value of `false` removes the variable
     * `:max_output` - bytes of output kept, from the end, default 64 KiB
 
   Stderr is merged into the output. Returns `{:ok, %{exit_status:, output:}}`
@@ -73,7 +74,7 @@ defmodule Smelt.Gate.Command do
         :exit_status,
         :stderr_to_stdout,
         cd: Keyword.fetch!(opts, :cd),
-        env: for({name, value} <- Keyword.get(opts, :env, []), do: {~c"#{name}", ~c"#{value}"}),
+        env: port_env(Keyword.get(opts, :env, [])),
         args: ["-c", @wrapper, executable | args]
       ])
 
@@ -131,6 +132,13 @@ defmodule Smelt.Gate.Command do
         state.output
     after
       @term_grace_ms -> state.output
+    end
+  end
+
+  # `false` removes a variable from the inherited environment.
+  defp port_env(env) do
+    for {name, value} <- env do
+      {String.to_charlist(name), if(value == false, do: false, else: String.to_charlist(value))}
     end
   end
 
