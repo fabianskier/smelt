@@ -10,6 +10,8 @@ defmodule Smelt.TaskRun do
   Progress is broadcast on `topic/1` as `{Smelt.TaskRun, id, event}`:
 
     * `{:workspace_created, %Smelt.Workspace{}}`
+    * `:setup_started` and `{:setup_finished, outcome}`, only when the project
+      has a `.smelt/setup.sh` (see `Smelt.TaskRun.Setup`)
     * `{:agent_started, attempt, runner_run_id}`
     * `{:agent_finished, attempt, {:ok, %Smelt.Runner.Result{}} | {:error, reason}}`
     * `{:gate_started, attempt}`
@@ -24,11 +26,13 @@ defmodule Smelt.TaskRun do
   alias Smelt.Git
   alias Smelt.Runner.ClaudeCode
   alias Smelt.TaskRun.Prompt
+  alias Smelt.TaskRun.Setup
   alias Smelt.TaskRun.TaskList
   alias Smelt.Workspace
 
   @pubsub Smelt.PubSub
   @max_attempts 2
+  @max_budget_usd 5.0
 
   # In headless mode anything not allowed is denied, so this is the agent's
   # whole permission set inside the workspace.
@@ -107,6 +111,9 @@ defmodule Smelt.TaskRun do
     * `:base`, `:root` - passed to `Smelt.Workspace.create/4`
     * `:model` - the model for the agent, on every attempt (default: the
       Claude Code CLI's own default)
+    * `:max_budget_usd` - the spending limit of each agent attempt (default
+      #{@max_budget_usd})
+    * `:setup` - options for `Smelt.TaskRun.Setup.run/2`
     * `:runner` - extra options for `Smelt.Runner.ClaudeCode.run/2`
     * `:gate` - options for `Smelt.Gate.run/2`
   """
@@ -119,12 +126,22 @@ defmodule Smelt.TaskRun do
       with {:ok, ws} <- Workspace.create(repo, change, task_id, ws_opts),
            {:ok, task} <- fetch_task(ws, ws_opts) do
         broadcast(id, {:workspace_created, ws})
+        setup(id, ws, opts)
         run = %__MODULE__{id: id, workspace: ws, task: task}
         attempt(run, 1, Prompt.task(change, task), nil, opts)
       end
 
     broadcast(id, {:finished, result})
     result
+  end
+
+  # Runs the project's setup script, if it has one. A failed setup is only
+  # reported: the agent can still do the work itself.
+  defp setup(id, ws, opts) do
+    if match?({:ok, _}, Git.cmd(ws.repo, ["cat-file", "-e", "#{ws.base_sha}:#{Setup.script()}"])) do
+      broadcast(id, :setup_started)
+      broadcast(id, {:setup_finished, Setup.run(ws, Keyword.get(opts, :setup, []))})
+    end
   end
 
   # The task is read at the workspace's exact base commit. If it can't be
@@ -146,6 +163,7 @@ defmodule Smelt.TaskRun do
 
     resume = if session_id, do: ["--resume", session_id], else: []
     model = if opts[:model], do: ["--model", opts[:model]], else: []
+    budget = ["--max-budget-usd", to_string(Keyword.get(opts, :max_budget_usd, @max_budget_usd))]
 
     runner_opts =
       opts
@@ -153,7 +171,7 @@ defmodule Smelt.TaskRun do
       |> Keyword.merge(
         cwd: run.workspace.path,
         run_id: run_id,
-        args: @agent_args ++ model ++ resume
+        args: @agent_args ++ model ++ budget ++ resume
       )
 
     result = ClaudeCode.run(prompt, runner_opts)

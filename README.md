@@ -42,6 +42,8 @@ It creates an isolated workspace (a git worktree) for the task, runs Claude Code
 
 - `--merge` merges a workspace you kept, `--discard` removes it, `--base BRANCH` starts from another branch.
 - Optional limits go in the project's `.smelt/gate.json`; see `docs/architecture.md`.
+- An optional `.smelt/setup.sh` (for example `mix deps.get` and a compile) runs in each new workspace before the agent starts, so the agent does not spend turns on it.
+- Each agent attempt may spend at most 5 USD; change it with `--max-budget USD`. `--model NAME` picks the agent's model.
 - Each task uses one or two Claude Code sessions of your plan's quota.
 
 ## Documentation

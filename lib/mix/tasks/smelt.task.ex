@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Smelt.Task do
   @moduledoc """
   Runs one task of an OpenSpec change end to end from the terminal.
 
-      mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME]
+      mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME] [--max-budget USD]
       mix smelt.task REPO CHANGE TASK_ID --merge
       mix smelt.task REPO CHANGE TASK_ID --discard
 
@@ -20,6 +20,8 @@ defmodule Mix.Tasks.Smelt.Task do
     * `--base` is the branch to start from (default `main`)
     * `--model` is the model the agent runs on, for example `sonnet` for a
       documentation-only task (default: the Claude Code CLI's own default)
+    * `--max-budget` is the most each agent attempt may spend, in USD
+      (default 5); an attempt that reaches it fails and keeps the workspace
 
   Exits with a non-zero status when the task did not pass or a merge failed.
   See `Smelt.TaskRun` for the details.
@@ -34,7 +36,13 @@ defmodule Mix.Tasks.Smelt.Task do
   alias Smelt.Workspace
 
   @requirements ["app.start"]
-  @switches [base: :string, model: :string, merge: :boolean, discard: :boolean]
+  @switches [
+    base: :string,
+    model: :string,
+    max_budget: :float,
+    merge: :boolean,
+    discard: :boolean
+  ]
 
   @impl Mix.Task
   def run(args), do: run(args, [])
@@ -48,6 +56,11 @@ defmodule Mix.Tasks.Smelt.Task do
         repo = Path.expand(repo)
         extra = Keyword.merge(extra, Keyword.take(opts, [:base, :model]))
 
+        extra =
+          if opts[:max_budget],
+            do: Keyword.put(extra, :max_budget_usd, opts[:max_budget]),
+            else: extra
+
         cond do
           opts[:discard] -> discard(repo, change, task_id, extra)
           opts[:merge] -> merge_kept(repo, change, task_id, extra)
@@ -56,7 +69,7 @@ defmodule Mix.Tasks.Smelt.Task do
 
       _ ->
         Mix.raise(
-          "Usage: mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME] [--merge | --discard]"
+          "Usage: mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME] [--max-budget USD] [--merge | --discard]"
         )
     end
   end
@@ -131,6 +144,15 @@ defmodule Mix.Tasks.Smelt.Task do
   end
 
   defp print_step({:workspace_created, ws}), do: say("Workspace #{ws.path} (#{ws.branch})")
+  defp print_step(:setup_started), do: say("\n▶ Setup")
+  defp print_step({:setup_finished, :ok}), do: say("  ✓ .smelt/setup.sh")
+
+  defp print_step({:setup_finished, {:error, details}}) do
+    say("  ✗ .smelt/setup.sh: #{details[:reason]} (the agent starts anyway)")
+    say(indent(tail(details[:output], 15)))
+  end
+
+  defp print_step({:setup_finished, :skipped}), do: :ok
   defp print_step({:agent_started, 1, _}), do: say("\n▶ Agent")
 
   defp print_step({:agent_started, n, _}),
