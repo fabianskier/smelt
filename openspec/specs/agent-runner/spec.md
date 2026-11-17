@@ -79,7 +79,7 @@ The system SHALL parse agent output lines of any length. Lines that are not vali
 - **THEN** the run continues and still returns the final result
 
 ### Requirement: Fail with a descriptive error
-The system SHALL end a run with an error, instead of a successful result, when the agent executable cannot be started, exits with a non-zero status, reports an error result, or exits without reporting a result. The error MUST identify which of these cases occurred.
+The system SHALL end a run with an error, instead of a successful result, when the agent executable cannot be started, exits with a non-zero status, reports an error result, exits without reporting a result, or stops because a usage limit was reached. The error MUST identify which of these cases occurred. A usage limit MUST be reported as such, with the agent's final result, whatever the exit status.
 
 #### Scenario: Non-zero exit
 - **WHEN** the agent process exits with a non-zero status
@@ -96,6 +96,10 @@ The system SHALL end a run with an error, instead of a successful result, when t
 #### Scenario: Executable not found
 - **WHEN** a run is started and the configured agent executable does not exist
 - **THEN** the run returns an error stating that the executable was not found
+
+#### Scenario: Usage limit reached
+- **WHEN** the agent reports a rejected usage limit and an error result, then exits with status 1
+- **THEN** the run returns a usage-limit error that includes the reported result and its message
 
 ### Requirement: Agent does not wait for input
 The system SHALL start the agent with its standard input closed, so the agent never blocks waiting for input.
