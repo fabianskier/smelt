@@ -30,6 +30,7 @@ defmodule Mix.Tasks.Smelt.Task do
   alias Smelt.Runner
   alias Smelt.Runner.Event
   alias Smelt.TaskRun
+  alias Smelt.TaskRun.Usage
   alias Smelt.Workspace
 
   @requirements ["app.start"]
@@ -69,8 +70,9 @@ defmodule Mix.Tasks.Smelt.Task do
 
     say("Running task #{task_id} of #{change} in #{repo}")
     task = Task.async(fn -> TaskRun.run(repo, change, task_id, [id: id] ++ extra) end)
-    result = follow(id)
+    {result, usage} = follow(id, Usage.new())
     _ = Task.await(task, :infinity)
+    report_usage(usage, result, {repo, change, task_id}, extra)
 
     case result do
       {:ok, %TaskRun{status: :passed} = run} ->
@@ -87,19 +89,44 @@ defmodule Mix.Tasks.Smelt.Task do
     end
   end
 
-  # Prints events until the task run finishes, and returns its result.
-  defp follow(id) do
+  # Prints events until the task run finishes, and returns its result with
+  # what its agent consumed.
+  defp follow(id, usage) do
     receive do
       {TaskRun, ^id, {:finished, result}} ->
-        result
+        {result, usage}
 
       {TaskRun, ^id, event} ->
         print_step(event)
-        follow(id)
+        follow(id, usage)
 
       {Runner, _run_id, %Event{} = event} ->
         print_agent(event)
-        follow(id)
+        follow(id, Usage.record(usage, event))
+    end
+  end
+
+  # A run that never started (no agent, no turns) has nothing to report.
+  defp report_usage(%Usage{turns: 0, tools: tools}, _result, _task, _extra)
+       when map_size(tools) == 0,
+       do: :ok
+
+  defp report_usage(usage, result, {repo, change, task_id}, extra) do
+    say("")
+    usage |> Usage.lines() |> Enum.each(&say/1)
+
+    status =
+      case result do
+        {:ok, %TaskRun{status: status}} -> status
+        {:error, _reason} -> :error
+      end
+
+    root = Keyword.get_lazy(extra, :root, &Workspace.default_root/0)
+    entry = Usage.entry(usage, %{repo: repo, change: change, task_id: task_id, status: status})
+
+    case Usage.append(Path.join(root, "usage.jsonl"), entry) do
+      :ok -> :ok
+      {:error, reason} -> say("  (usage not recorded: #{inspect(reason)})")
     end
   end
 
