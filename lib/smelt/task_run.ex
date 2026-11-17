@@ -46,6 +46,8 @@ defmodule Smelt.TaskRun do
     "Bash(elixir:*)",
     "Bash(erl:*)",
     "Bash(git:*)",
+    "Bash(openspec validate:*)",
+    "Bash(chmod:*)",
     "Bash(sh .smelt/checks.sh)",
     "--disallowedTools",
     "Bash(git push:*)"
@@ -103,6 +105,8 @@ defmodule Smelt.TaskRun do
 
     * `:id` - the task run id, default `new_id/0`
     * `:base`, `:root` - passed to `Smelt.Workspace.create/4`
+    * `:model` - the model for the agent, on every attempt (default: the
+      Claude Code CLI's own default)
     * `:runner` - extra options for `Smelt.Runner.ClaudeCode.run/2`
     * `:gate` - options for `Smelt.Gate.run/2`
   """
@@ -141,11 +145,16 @@ defmodule Smelt.TaskRun do
     broadcast(run.id, {:agent_started, number, run_id})
 
     resume = if session_id, do: ["--resume", session_id], else: []
+    model = if opts[:model], do: ["--model", opts[:model]], else: []
 
     runner_opts =
       opts
       |> Keyword.get(:runner, [])
-      |> Keyword.merge(cwd: run.workspace.path, run_id: run_id, args: @agent_args ++ resume)
+      |> Keyword.merge(
+        cwd: run.workspace.path,
+        run_id: run_id,
+        args: @agent_args ++ model ++ resume
+      )
 
     result = ClaudeCode.run(prompt, runner_opts)
     broadcast(run.id, {:agent_finished, number, result})

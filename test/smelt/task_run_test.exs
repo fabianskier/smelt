@@ -85,6 +85,8 @@ defmodule Smelt.TaskRunTest do
                "Bash(elixir:*)",
                "Bash(erl:*)",
                "Bash(git:*)",
+               "Bash(openspec validate:*)",
+               "Bash(chmod:*)",
                "Bash(sh .smelt/checks.sh)"
              ]
 

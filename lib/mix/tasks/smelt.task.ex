@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Smelt.Task do
   @moduledoc """
   Runs one task of an OpenSpec change end to end from the terminal.
 
-      mix smelt.task REPO CHANGE TASK_ID [--base BRANCH]
+      mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME]
       mix smelt.task REPO CHANGE TASK_ID --merge
       mix smelt.task REPO CHANGE TASK_ID --discard
 
@@ -18,6 +18,8 @@ defmodule Mix.Tasks.Smelt.Task do
       base moved), without running the agent
     * `--discard` removes a task's workspace and branch
     * `--base` is the branch to start from (default `main`)
+    * `--model` is the model the agent runs on, for example `sonnet` for a
+      documentation-only task (default: the Claude Code CLI's own default)
 
   Exits with a non-zero status when the task did not pass or a merge failed.
   See `Smelt.TaskRun` for the details.
@@ -31,7 +33,7 @@ defmodule Mix.Tasks.Smelt.Task do
   alias Smelt.Workspace
 
   @requirements ["app.start"]
-  @switches [base: :string, merge: :boolean, discard: :boolean]
+  @switches [base: :string, model: :string, merge: :boolean, discard: :boolean]
 
   @impl Mix.Task
   def run(args), do: run(args, [])
@@ -43,7 +45,7 @@ defmodule Mix.Tasks.Smelt.Task do
     case OptionParser.parse(args, strict: @switches) do
       {opts, [repo, change, task_id], []} ->
         repo = Path.expand(repo)
-        extra = Keyword.merge(extra, Keyword.take(opts, [:base]))
+        extra = Keyword.merge(extra, Keyword.take(opts, [:base, :model]))
 
         cond do
           opts[:discard] -> discard(repo, change, task_id, extra)
@@ -53,7 +55,7 @@ defmodule Mix.Tasks.Smelt.Task do
 
       _ ->
         Mix.raise(
-          "Usage: mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--merge | --discard]"
+          "Usage: mix smelt.task REPO CHANGE TASK_ID [--base BRANCH] [--model NAME] [--merge | --discard]"
         )
     end
   end

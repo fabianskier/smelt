@@ -26,7 +26,10 @@ defmodule Smelt.TaskRun.Prompt do
     - Do not modify or delete existing tests, and do not change anything under .smelt/.
     - Put new tests in new test files. Adding to an existing test file counts as modifying it, and Smelt's gate rejects it.
     - When done, mark task #{id} as done in #{TaskList.path(change)}.
-    - Run `sh .smelt/checks.sh` and fix every failure until it passes.
+    - While you work, run only the tests you touched.
+    - When the work is complete, run `sh .smelt/checks.sh` once. Run it again only after fixing a failure it reported.
+    - Do not run other full-suite commands in its place (for example `mix precommit` or the whole test suite), even if the project's instructions list them: Smelt's gate runs the checks and the OpenSpec validation after you finish.
+    - If a command is denied, do not retry it or work around it. Go on without it and say so in your final message.
     - Commit your work with a Conventional Commit message.
     """
   end
