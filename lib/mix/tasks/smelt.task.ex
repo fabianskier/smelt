@@ -91,6 +91,15 @@ defmodule Mix.Tasks.Smelt.Task do
       {:ok, %TaskRun{status: :passed} = run} ->
         review(run, extra)
 
+      {:ok, %TaskRun{status: :usage_limited} = run} ->
+        say(
+          "\nTask stopped by a usage limit (#{cost(run)}), not by the work. " <>
+            "Run it again when the limit resets, or with another --model."
+        )
+
+        keep(run.workspace)
+        fail()
+
       {:ok, %TaskRun{} = run} ->
         say("\nTask #{run.status |> to_string() |> String.replace("_", " ")} (#{cost(run)}).")
         keep(run.workspace)
@@ -160,6 +169,9 @@ defmodule Mix.Tasks.Smelt.Task do
 
   defp print_step({:agent_finished, _n, {:ok, result}}),
     do: say("  done in #{result.num_turns || "?"} turns (#{money(result.cost_usd)})")
+
+  defp print_step({:agent_finished, _n, {:error, {:usage_limit, result}}}),
+    do: say("  stopped by a usage limit: #{String.trim(result.text)}")
 
   defp print_step({:agent_finished, _n, {:error, reason}}),
     do: say("  agent failed: #{inspect(reason)}")

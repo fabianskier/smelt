@@ -78,6 +78,7 @@ defmodule Smelt.Runner.ClaudeCode.Session do
        buffer: [],
        output: [],
        result: nil,
+       limit_rejected?: false,
        outcome: nil,
        from: nil
      }}
@@ -156,6 +157,10 @@ defmodule Smelt.Runner.ClaudeCode.Session do
   end
 
   defp track_result(%Event{type: :result, data: data}, state), do: %{state | result: data}
+
+  defp track_result(%Event{type: :rate_limit, data: %{status: "rejected"}}, state),
+    do: %{state | limit_rejected?: true}
+
   defp track_result(_event, state), do: state
 
   defp keep_output(line, state) do
@@ -164,6 +169,14 @@ defmodule Smelt.Runner.ClaudeCode.Session do
   end
 
   ## Ending a run
+
+  # A usage limit ends the run with an error result and exit status 1. It is
+  # reported as such whatever the exit status, so callers can tell it from a
+  # failure of the work.
+  defp outcome(_status, %{result: %{is_error: true, result: result} = data} = state)
+       when state.limit_rejected? or :erlang.map_get(:api_error_status, data) == 429 do
+    {:error, {:usage_limit, result}}
+  end
 
   # The `result` line arrives before the exit, but the exit status decides.
   defp outcome(status, state) when status != 0 do

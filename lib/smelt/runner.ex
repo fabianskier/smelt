@@ -25,6 +25,7 @@ defmodule Smelt.Runner do
   @type error ::
           {:exit_status, non_neg_integer(), output :: [String.t()]}
           | {:agent_error, term()}
+          | {:usage_limit, Result.t()}
           | :no_result
           | :executable_not_found
           | :stopped

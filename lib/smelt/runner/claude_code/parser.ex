@@ -56,6 +56,7 @@ defmodule Smelt.Runner.ClaudeCode.Parser do
       event(:result, %{
         is_error: Map.get(msg, "is_error", false),
         subtype: msg["subtype"],
+        api_error_status: msg["api_error_status"],
         result: to_result(msg)
       })
     ]

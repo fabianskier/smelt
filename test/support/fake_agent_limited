@@ -1,0 +1,6 @@
+#!/bin/sh
+# Fake coding agent that reaches a usage limit: replays the recorded
+# usage_limit.jsonl (a rejected limit and an error result costing 0.91 USD)
+# and exits with status 1, as Claude Code does.
+cat "$(dirname "$0")/fixtures/claude/usage_limit.jsonl"
+exit 1

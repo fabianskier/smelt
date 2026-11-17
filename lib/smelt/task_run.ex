@@ -70,7 +70,7 @@ defmodule Smelt.TaskRun do
           id: String.t(),
           workspace: Workspace.t(),
           task: TaskList.task(),
-          status: :passed | :gate_failed | :agent_failed,
+          status: :passed | :gate_failed | :agent_failed | :usage_limited,
           gate: Gate.Result.t() | nil,
           attempts: [attempt()],
           cost_usd: float()
@@ -100,7 +100,8 @@ defmodule Smelt.TaskRun do
   Runs task `task_id` of `change` in `repo`.
 
   Returns `{:ok, %Smelt.TaskRun{}}` with `status` `:passed`, `:gate_failed`
-  or `:agent_failed`, keeping the workspace in every case. Returns
+  `:agent_failed` or `:usage_limited` (the agent stopped because a usage
+  limit was reached), keeping the workspace in every case. Returns
   `{:error, reason}` when the task never started (the workspace's errors,
   `:change_not_found`, `:task_not_found`, `:task_done`, leaving no workspace)
   or the gate could not run (`{:gate_error, reason}`, keeping the workspace).
@@ -185,6 +186,7 @@ defmodule Smelt.TaskRun do
 
     case result do
       {:ok, agent} -> gate(run, number, agent.session_id, opts)
+      {:error, {:usage_limit, _result}} -> {:ok, %{run | status: :usage_limited}}
       {:error, _} -> {:ok, %{run | status: :agent_failed}}
     end
   end
@@ -336,6 +338,12 @@ defmodule Smelt.TaskRun do
   end
 
   defp cost({:ok, %{cost_usd: cost}}) when is_number(cost), do: cost
+
+  # A failed attempt that reported a result still spent money.
+  defp cost({:error, {kind, %{cost_usd: cost}}})
+       when kind in [:agent_error, :usage_limit] and is_number(cost),
+       do: cost
+
   defp cost(_result), do: 0.0
 
   defp broadcast(id, event) do
