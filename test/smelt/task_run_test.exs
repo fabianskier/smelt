@@ -87,7 +87,8 @@ defmodule Smelt.TaskRunTest do
                "Bash(git:*)",
                "Bash(openspec validate:*)",
                "Bash(chmod:*)",
-               "Bash(sh .smelt/checks.sh)"
+               "Bash(sh .smelt/checks.sh)",
+               "Bash(npm run:*)"
              ]
 
       assert after_flag(args, "--disallowedTools") == ["Bash(git push:*)"]

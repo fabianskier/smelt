@@ -9,11 +9,14 @@ defmodule Smelt.Gate.Config do
         "test_paths": ["test/"],
         "max_changed_lines": 400,
         "max_changed_files": 20,
+        "uncounted_paths": [],
         "timeout_seconds": 900
       }
 
   A path is under a test path when it starts with it: `test/` matches
-  `test/a_test.exs` but not `tests/a.exs`.
+  `test/a_test.exs` but not `tests/a.exs`. `uncounted_paths` match the same
+  way and name generated files (a route tree, a lockfile) whose changes do not
+  count toward `max_changed_lines` and `max_changed_files`.
   """
 
   alias Smelt.Git
@@ -23,12 +26,14 @@ defmodule Smelt.Gate.Config do
   defstruct test_paths: ["test/"],
             max_changed_lines: 400,
             max_changed_files: 20,
+            uncounted_paths: [],
             timeout_seconds: 900
 
   @type t :: %__MODULE__{
           test_paths: [String.t()],
           max_changed_lines: pos_integer(),
           max_changed_files: pos_integer(),
+          uncounted_paths: [String.t()],
           timeout_seconds: pos_integer()
         }
 
@@ -36,6 +41,7 @@ defmodule Smelt.Gate.Config do
     "test_paths" => :test_paths,
     "max_changed_lines" => :max_changed_lines,
     "max_changed_files" => :max_changed_files,
+    "uncounted_paths" => :uncounted_paths,
     "timeout_seconds" => :timeout_seconds
   }
 
@@ -108,8 +114,13 @@ defmodule Smelt.Gate.Config do
     is_list(paths) and paths != [] and Enum.all?(paths, &(is_binary(&1) and &1 != ""))
   end
 
+  defp valid?(:uncounted_paths, paths) do
+    is_list(paths) and Enum.all?(paths, &(is_binary(&1) and &1 != ""))
+  end
+
   defp valid?(_number, value), do: is_integer(value) and value > 0
 
   defp expected(:test_paths), do: "must be a non-empty list of non-empty strings"
+  defp expected(:uncounted_paths), do: "must be a list of non-empty strings"
   defp expected(_number), do: "must be a positive integer"
 end

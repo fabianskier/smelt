@@ -38,12 +38,14 @@ defmodule Smelt.Gate.Rules do
 
   @doc """
   Fails when the changed lines (added plus deleted) or the changed files
-  exceed the configured maximums.
+  exceed the configured maximums. Changes under `uncounted_paths` (generated
+  files) are left out of both counts.
   """
   @spec diff_size([Smelt.Gate.Changes.change()], Config.t()) :: outcome()
   def diff_size(changes, %Config{} = config) do
-    lines = Enum.sum_by(changes, &(&1.added + &1.deleted))
-    files = length(changes)
+    counted = Enum.reject(changes, &String.starts_with?(&1.path, config.uncounted_paths))
+    lines = Enum.sum_by(counted, &(&1.added + &1.deleted))
+    files = length(counted)
 
     %{
       name: :diff_size,

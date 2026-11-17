@@ -35,7 +35,7 @@ The system SHALL give the agent a prompt that names the change, the task id and 
 - **THEN** the agent's prompt tells it to put new tests in new test files and that adding to an existing test file counts as modifying it
 
 ### Requirement: Limit the agent's permissions
-The system SHALL run the agent allowing only reading, searching and editing files, and running `mix` (also prefixed with `MIX_ENV=test`), `elixir`, `erl`, `git`, `openspec validate`, `chmod` and the project's checks script. Pushing with git MUST be denied.
+The system SHALL run the agent allowing only reading, searching and editing files, and running `mix` (also prefixed with `MIX_ENV=test`), `elixir`, `erl`, `git`, `openspec validate`, `chmod`, `npm run` (package scripts, not installs) and the project's checks script. Pushing with git MUST be denied.
 
 #### Scenario: Agent permissions
 - **WHEN** a task is run

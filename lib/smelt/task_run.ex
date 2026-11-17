@@ -53,6 +53,10 @@ defmodule Smelt.TaskRun do
     "Bash(openspec validate:*)",
     "Bash(chmod:*)",
     "Bash(sh .smelt/checks.sh)",
+    # Node projects: package scripts only (tests, formatter, type check), also
+    # in a subfolder with `npm run <script> --prefix <dir>`. Installing
+    # packages stays out (no `npm install`, `npm ci` or `npx`).
+    "Bash(npm run:*)",
     "--disallowedTools",
     "Bash(git push:*)"
   ]
