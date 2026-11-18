@@ -2,7 +2,7 @@
 
 ## 1. Publish
 
-- [ ] 1.1 Add `LICENSE` with exactly this text:
+- [x] 1.1 Add `LICENSE` with exactly this text:
 
       Copyright (c) 2026 Oscar Fabián Cristaldo Guzmán. All rights reserved.
 

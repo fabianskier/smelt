@@ -17,7 +17,7 @@ Stage 1 (skeleton) complete for CLI use. Stage 2 complete for CLI use: one task 
 
 **Done:**
 - Environment (mise with Erlang 29.1.2, Elixir 1.20.5, Node, OpenSpec 2.0.0) and the Phoenix 1.8 project, generated with `mix phx.new . --app smelt --no-mailer --no-gettext`. The `smelt_dev` and `smelt_test` databases exist.
-- 1.4: first commit, pushed to the private repo `github.com/fabianskier/smelt`.
+- 1.4: first commit, pushed to the public repository `github.com/fabianskier/smelt`.
 - 1.5: `openspec init --tools claude`, project rules in `openspec/config.yaml`, `CLAUDE.md`, and docs split into `README.md` + `docs/`.
 - 1.6: `DATABASE_URL` set in `mise.toml` `[env]` and read in `config/runtime.exs` (dev only; tests keep `smelt_test` from `config/test.exs`).
 - 1.7: Oban 2.24 (Postgres, Basic engine, migration v14) with queues `claude: 1`, `local: 1`, plus Pruner (7 days) and Lifeline plugins. Tests use `testing: :manual`.
