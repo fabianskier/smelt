@@ -60,7 +60,7 @@ You see the agent and the gate live; when the task passes, Smelt shows the diff 
 
 ## What it built
 
-[`courier`](https://github.com/fabianskier/courier) was built with Smelt. Measured over the whole project: 39 task runs over 12 OpenSpec changes; 36 passed the gate (2 agent failures, 1 stopped by a usage limit). It cost $39.38 in total, with a median of $0.91 per passed task, from $0.16 for a docs task on Sonnet to $4.56 for a frontend task that needed a retry.
+[`courier`](https://github.com/fabianskier/courier) was built with Smelt. Smelt records usage since `courier`'s `add-release-demo-commands` change; the earlier changes ran before that and are not counted. Since then: 40 task runs over 13 OpenSpec changes; 37 passed the gate (2 agent failures, 1 stopped by a usage limit). They cost $39.48 in total, with a median of $0.87 per passed task, from $0.10 for a docs task on Sonnet to $4.56 for a frontend task that needed a retry.
 
 ## Documentation
 
