@@ -52,7 +52,7 @@ Each decision records its context, what was chosen and its consequences. When a 
 
 ## Private project
 
-**Status:** accepted (2026-11)
+**Status:** accepted (2026-11); superseded by "Public repository, all rights reserved"
 **Context:** This is a personal tool.
 **Decision:** No license, no hex.pm release, private repository.
 **Consequences:** If it is ever shared, it will be through private repo access or a closed binary (Burrito). Before that, review Anthropic's terms: users must bring their own Claude Code or API key, never the author's subscription.
@@ -87,3 +87,19 @@ Each decision records its context, what was chosen and its consequences. When a 
 | Cost extracted from transcripts | Cost comes from stream-json |
 | AI approver with automatic merge | Human approval |
 | Static dashboard | LiveView |
+
+## Public repository, all rights reserved
+
+**Status:** accepted (2026-11)
+**Context:** Smelt built every task of the public portfolio project `courier`, whose docs describe it; readers can only check that claim if Smelt's code is visible. "Private project" kept it private with no license and asked to review Anthropic's terms before sharing it. Smelt drives the Claude Code CLI with whatever login the user running it has; it holds no keys or subscription of its own.
+**Options considered:**
+- *Keep it private*: nothing to maintain or explain, but `courier`'s development story stays unverifiable.
+- *Public with an open license (MIT, Apache-2.0)*: invites reuse and contributions the author does not want to support.
+- *Public, all rights reserved*: readable and verifiable, no permission to reuse; the same choice as `courier`.
+**Decision:** Make the GitHub repository public under an "all rights reserved" notice in `LICENSE` (review only, as in `courier`). No hex.pm release, no binaries, no support or contribution process.
+**Consequences:**
+- Anyone running Smelt must use their own Claude Code login; the README says so, which meets the condition "Private project" set on Anthropic's terms.
+- Ideas taken from the GPLv3 zazencodes project stay ideas only ("Take ideas from zazencodes software-factory v2, not code"); publishing changes nothing there.
+- The README must describe the current state honestly, including what is parked (the LiveView dashboard) or missing.
+- If outside use is ever wanted, a new ADR picks an open license.
+
